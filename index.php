@@ -11,10 +11,16 @@
         // Total files usage either hasn't been stored, or is out of date:
         $totaldate = date("Y-m-d H:i", time());
         $totalusage = du($CFG->dataroot);
+        // TODO: check if CFG->pathtodu is set, and if so, use it
+        //       this will speed up linux systems.
+        //       for now, all OS are the same speed
+        // TODO: Save this result in $CFG->filessize and $CFG->filessizeupdated
+        //       so that it's available for the next report hit
     }
     $totalusagereadable = number_format(ceil($totalusage/1048576)) . " MB";
 
     // TODO: display the sizes of directories (other than filedir) in dataroot
+    //       eg old 1.9 course dirs, temp, sessions etc
 
     // Generate a full list of context sitedata usage stats
     $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
