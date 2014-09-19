@@ -26,16 +26,17 @@ require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('reportcoursesize');
-if (!empty($CFG->filessize) && !empty($CFG->filessizeupdated) && ($CFG->filessizeupdated > time() - 2 * DAYSECS)) {
+$reportconfig = get_config('report_coursesize');
+if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated) && ($reportconfig->filessizeupdated > time() - 1 * DAYSECS)) {
     // Total files usage has been recently calculated, and stored by another process - use that.
-    $totalusage = $CFG->filessize;
-    $totaldate = date("Y-m-d H:i", $CFG->filessizeupdated);
+    $totalusage = $reportconfig->filessize;
+    $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
 } else {
     // Total files usage either hasn't been stored, or is out of date.
     $totaldate = date("Y-m-d H:i", time());
     $totalusage = get_directory_size($CFG->dataroot);
-    // TODO: Save this result in $CFG->filessize and $CFG->filessizeupdated
-    //       so that it's available for the next report hit.
+    set_config('filessize', $totalusage, 'report_coursesize');
+    set_config('filessizeupdated', time(), 'report_coursesize');
 }
 
 $totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
@@ -115,7 +116,7 @@ foreach ($cxsizes as $cxdata) {
     }
 }
 $cxsizes->close();
-$courses = $DB->get_records_sql('select id, shortname from ' . $CFG->prefix. 'course');
+$courses = $DB->get_records('course', array(), '', 'id, shortname');
 
 $coursetable = new html_table();
 $coursetable->align = array('right', 'right', 'right');
