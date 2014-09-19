@@ -33,10 +33,7 @@ if (!empty($CFG->filessize) && !empty($CFG->filessizeupdated) && ($CFG->filessiz
 } else {
     // Total files usage either hasn't been stored, or is out of date.
     $totaldate = date("Y-m-d H:i", time());
-    $totalusage = du($CFG->dataroot);
-    // TODO: check if CFG->pathtodu is set, and if so, use it
-    //       this will speed up linux systems.
-    //       for now, all OS are the same speed
+    $totalusage = get_directory_size($CFG->dataroot);
     // TODO: Save this result in $CFG->filessize and $CFG->filessizeupdated
     //       so that it's available for the next report hit.
 }
@@ -209,33 +206,3 @@ print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<b
 print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
 
 print $OUTPUT->footer();
-
-function du ($dirname) {
-    if (empty($dirname) || !is_dir($dirname)) {
-        return 0;
-    }
-
-    $du = 0;
-    $handle = opendir($dirname);
-    if (!$handle) {
-        return 0;
-    }
-    while ($item = readdir($handle)) {
-        if (!$item) {
-            continue;
-        }
-        if ($item == '.' || $item == '..') {
-            // Ignore implied directories.
-            continue;
-        }
-        $path = $dirname . '/' . $item;
-        $itemsize = filesize($path);
-        $du += $itemsize;
-        if (is_dir($path)) {
-            $subdirsize = du($dirname . '/' . $item);
-            $du += $subdirsize;
-        }
-    }
-    closedir($handle);
-    return $du;
-}
