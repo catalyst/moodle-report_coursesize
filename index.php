@@ -32,7 +32,7 @@
             ' INNER JOIN ( ' . $subsql . $groupby . ' ) size on cx.id=size.contextid' .
             ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
             ' ORDER by cx.depth ASC, cx.path ASC';
-    $cxsizes = $DB->get_records_sql($sizesql);
+    $cxsizes = $DB->get_recordset_sql($sizesql);
     $coursesizes = array(); // To track a mapping of courseid to filessize
     $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize
     $usersizes = array(); // To track a mapping of users to filesize
@@ -41,10 +41,8 @@
             'FROM {course} c ' .
             ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
     $courselookup = $DB->get_records_sql($coursesql);
-    $courses = $DB->get_records('course');
-    $users = $DB->get_records('user');
 
-    foreach($cxsizes as $cxid => $cxdata) {
+    foreach($cxsizes as $cxdata) {
         $contextlevel = $cxdata->contextlevel;
         $instanceid = $cxdata->instanceid;
         $contextsize = $cxdata->filessize;
@@ -95,6 +93,8 @@
             $systembackupsize += $contextbackupsize;
         }
     }
+    $cxsizes->close();
+    $courses = $DB->get_records_sql('select id, shortname from ' . $CFG->prefix. 'course');
 
     $coursetable = new html_table();
     $coursetable->align = array('right','right', 'right');
@@ -136,6 +136,7 @@
         $row[] = "<span title=\"$bytesused\">0 MB</span>";
         $coursetable->data[] = $row;
     }
+    unset($courses);
 
 
     if (!empty($usersizes)) {
@@ -144,13 +145,19 @@
         $usertable->align = array('right','right');
         $usertable->head = array(get_string('user'),'Disk Usage');
         $usertable->data=array();
+        $usercount = 0;
         foreach ($usersizes as $userid => $size) {
-            $user = $users[$userid];
+            $usercount++;
+            $user = $DB->get_record('user', array('id'=>$userid));
             $row = array();
             $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userid.'">' . fullname($user) . '</a>';
             $row[] = number_format(ceil($size/1048576)) . "MB";
             $usertable->data[] = $row;
+            if ($usercount >=10) {
+                break;
+            }
         }
+        unset($users);
     }
     $systemsizereadable = number_format(ceil($systemsize/1048576)) . "MB";
     $systembackupreadable = number_format(ceil($systembackupsize/1048576)) . "MB";
@@ -167,7 +174,7 @@
 
     print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'));
     print html_writer::table($coursetable);
-    print $OUTPUT->heading(get_string('users'));
+    print $OUTPUT->heading(get_string('userstop10', 'report_coursesize'));
     if (!isset($usertable)) {
         print get_string('nouserfiles', 'report_coursesize');
     } else {

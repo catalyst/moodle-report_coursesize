@@ -14,4 +14,5 @@ $string['sizepermitted'] = '(Permitted usage {$a}MB)';
 $string['sitefilesusage']='Site Files Usage';
 $string['system'] = 'System';
 $string['totalsitedata'] = 'Total sitedata usage: {$a}';
+$string['userstop10'] = 'USERS (top10)';
 ?>
