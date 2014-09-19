@@ -27,14 +27,22 @@ require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('reportcoursesize');
 
+// If we should show or hide empty courses.
 if (!defined('REPORT_COURSESIZE_SHOWEMPTYCOURSES')) {
     define('REPORT_COURSESIZE_SHOWEMPTYCOURSES', false);
 }
+// How many users should we show in the User list.
 if (!defined('REPORT_COURSESIZE_NUMBEROFUSERS')) {
     define('REPORT_COURSESIZE_NUMBEROFUSERS', 10);
 }
+// How often should we update the total sitedata usage.
+if (!defined('REPORT_COURSESIZE_UPDATETOTAL')) {
+    define('REPORT_COURSESIZE_UPDATETOTAL', 1 * DAYSECS);
+}
+
+
 $reportconfig = get_config('report_coursesize');
-if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated) && ($reportconfig->filessizeupdated > time() - 1 * DAYSECS)) {
+if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated) && ($reportconfig->filessizeupdated > time() - REPORT_COURSESIZE_UPDATETOTAL)) {
     // Total files usage has been recently calculated, and stored by another process - use that.
     $totalusage = $reportconfig->filessize;
     $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
@@ -197,13 +205,23 @@ $systembackupreadable = number_format(ceil($systembackupsize / 1048576)) . "MB";
 
 print $OUTPUT->header();
 print $OUTPUT->heading(get_string("sitefilesusage", 'report_coursesize'));
-print get_string("totalsitedata", 'report_coursesize', $totalusagereadable) . "<br/>\n";
-print get_string("sizerecorded", "report_coursesize", $totaldate) . "<br/>\n";
+print '<strong>'.get_string("totalsitedata", 'report_coursesize', $totalusagereadable).'</strong> ';
+print get_string("sizerecorded", "report_coursesize", $totaldate) . "<br/><br/>\n";
+print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<br/>";
+print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
 if (!empty($CFG->filessizelimit)) {
     print get_string("sizepermitted", 'report_coursesize', number_format($CFG->filessizelimit)). "<br/>\n";
 }
 
 print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'));
+$desc = get_string('coursesize_desc', 'report_coursesize');
+
+
+if (!REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
+    $desc .= ' '. get_string('emptycourseshidden', 'report_coursesize');
+}
+print $OUTPUT->box($desc);
+
 print html_writer::table($coursetable);
 print $OUTPUT->heading(get_string('userstopnum', 'report_coursesize', REPORT_COURSESIZE_NUMBEROFUSERS));
 if (!isset($usertable)) {
@@ -211,8 +229,5 @@ if (!isset($usertable)) {
 } else {
     print html_writer::table($usertable);
 }
-print $OUTPUT->heading(get_string('system', 'report_coursesize'));
-print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<br/>";
-print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
 
 print $OUTPUT->footer();
