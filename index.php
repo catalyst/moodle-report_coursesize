@@ -26,6 +26,13 @@ require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('reportcoursesize');
+
+if (!defined('REPORT_COURSESIZE_SHOWEMPTYCOURSES')) {
+    define('REPORT_COURSESIZE_SHOWEMPTYCOURSES', false);
+}
+if (!defined('REPORT_COURSESIZE_NUMBEROFUSERS')) {
+    define('REPORT_COURSESIZE_NUMBEROFUSERS', 10);
+}
 $reportconfig = get_config('report_coursesize');
 if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated) && ($reportconfig->filessizeupdated > time() - 1 * DAYSECS)) {
     // Total files usage has been recently calculated, and stored by another process - use that.
@@ -145,18 +152,20 @@ foreach ($coursesizes as $courseid => $size) {
 }
 
 // Now add the courses that had no sitedata into the table.
-$a = new stdClass;
-$a->bytes = 0;
-$a->backupbytes = 0;
-foreach ($courses as $cid => $course) {
-    $a->shortname = $course->shortname;
-    $bytesused = get_string('coursebytes', 'report_coursesize', $a);
-    $bytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
-    $row = array();
-    $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
-    $row[] = "<span title=\"$bytesused\">0 MB</span>";
-    $row[] = "<span title=\"$bytesused\">0 MB</span>";
-    $coursetable->data[] = $row;
+if (REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
+    $a = new stdClass;
+    $a->bytes = 0;
+    $a->backupbytes = 0;
+    foreach ($courses as $cid => $course) {
+        $a->shortname = $course->shortname;
+        $bytesused = get_string('coursebytes', 'report_coursesize', $a);
+        $bytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
+        $row = array();
+        $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
+        $row[] = "<span title=\"$bytesused\">0 MB</span>";
+        $row[] = "<span title=\"$bytesused\">0 MB</span>";
+        $coursetable->data[] = $row;
+    }
 }
 unset($courses);
 
@@ -175,7 +184,7 @@ if (!empty($usersizes)) {
         $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userid.'">' . fullname($user) . '</a>';
         $row[] = number_format(ceil($size / 1048576)) . "MB";
         $usertable->data[] = $row;
-        if ($usercount >= 10) {
+        if ($usercount >= REPORT_COURSESIZE_NUMBEROFUSERS) {
             break;
         }
     }
@@ -196,7 +205,7 @@ if (!empty($CFG->filessizelimit)) {
 
 print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'));
 print html_writer::table($coursetable);
-print $OUTPUT->heading(get_string('userstop10', 'report_coursesize'));
+print $OUTPUT->heading(get_string('userstopnum', 'report_coursesize', REPORT_COURSESIZE_NUMBEROFUSERS));
 if (!isset($usertable)) {
     print get_string('nouserfiles', 'report_coursesize');
 } else {

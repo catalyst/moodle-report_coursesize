@@ -22,19 +22,19 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['backupsize'] = 'Backup Size';
-$string['catsystemuse'] = 'System and Category use outside users and courses is {$a}.';
-$string['catsystembackupuse'] = 'System and Category backup use is {$a}.';
-$string['coursesize'] = 'Course Size';
+$string['backupsize'] = 'Backup size';
+$string['catsystemuse'] = 'System and category use outside users and courses is {$a}.';
+$string['catsystembackupuse'] = 'System and category backup use is {$a}.';
+$string['coursesize'] = 'Course size';
 $string['coursebytes'] = '{$a->bytes} bytes used by course {$a->shortname}';
 $string['coursebackupbytes'] = '{$a->backupbytes} bytes used for backup by course {$a->shortname}';
-$string['coursesize:view'] = 'View Course Size Report';
+$string['coursesize:view'] = 'View course size report';
 $string['diskusage'] = 'Disk Usage';
 $string['nouserfiles'] = 'No user files listed.';
-$string['pluginname'] = 'Course Size';
+$string['pluginname'] = 'Course size';
 $string['sizerecorded'] = '(Recorded {$a})';
 $string['sizepermitted'] = '(Permitted usage {$a}MB)';
-$string['sitefilesusage'] = 'Site Files Usage';
+$string['sitefilesusage'] = 'Site files usage';
 $string['system'] = 'System';
 $string['totalsitedata'] = 'Total sitedata usage: {$a}';
-$string['userstop10'] = 'USERS (top10)';
+$string['userstopnum'] = 'Users (top {$a})';
