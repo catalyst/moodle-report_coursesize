@@ -27,26 +27,26 @@ require_once($CFG->libdir.'/adminlib.php');
 
 admin_externalpage_setup('reportcoursesize');
 if (!empty($CFG->filessize) && !empty($CFG->filessizeupdated) && ($CFG->filessizeupdated > time() - 2 * DAYSECS)) {
-    // Total files usage has been recently calculated, and stored by another process - use that:
+    // Total files usage has been recently calculated, and stored by another process - use that.
     $totalusage = $CFG->filessize;
     $totaldate = date("Y-m-d H:i", $CFG->filessizeupdated);
 } else {
-    // Total files usage either hasn't been stored, or is out of date:
+    // Total files usage either hasn't been stored, or is out of date.
     $totaldate = date("Y-m-d H:i", time());
     $totalusage = du($CFG->dataroot);
     // TODO: check if CFG->pathtodu is set, and if so, use it
     //       this will speed up linux systems.
     //       for now, all OS are the same speed
     // TODO: Save this result in $CFG->filessize and $CFG->filessizeupdated
-    //       so that it's available for the next report hit
+    //       so that it's available for the next report hit.
 }
 
-$totalusagereadable = number_format(ceil($totalusage/1048576)) . " MB";
+$totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
 
 // TODO: display the sizes of directories (other than filedir) in dataroot
-//       eg old 1.9 course dirs, temp, sessions etc
+//       eg old 1.9 course dirs, temp, sessions etc.
 
-// Generate a full list of context sitedata usage stats
+// Generate a full list of context sitedata usage stats.
 $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
           ' FROM {files} f';
 $wherebackup = ' WHERE component like \'backup\'';
@@ -57,16 +57,16 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth, siz
            ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
            ' ORDER by cx.depth ASC, cx.path ASC';
 $cxsizes = $DB->get_recordset_sql($sizesql);
-$coursesizes = array(); // To track a mapping of courseid to filessize
-$coursebackupsizes = array(); // To track a mapping of courseid to backup filessize
-$usersizes = array(); // To track a mapping of users to filesize
+$coursesizes = array(); // To track a mapping of courseid to filessize.
+$coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
+$usersizes = array(); // To track a mapping of users to filesize.
 $systemsize = $systembackupsize = 0;
 $coursesql = 'SELECT cx.id, c.id as courseid ' .
              'FROM {course} c ' .
              ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
 $courselookup = $DB->get_records_sql($coursesql);
 
-foreach($cxsizes as $cxdata) {
+foreach ($cxsizes as $cxdata) {
     $contextlevel = $cxdata->contextlevel;
     $instanceid = $cxdata->instanceid;
     $contextsize = $cxdata->filessize;
@@ -86,19 +86,19 @@ foreach($cxsizes as $cxdata) {
         $systembackupsize = $contextbackupsize;
         continue;
     }
-    // Not a course, user, system, category, see it it's something that should be listed under a course:
-    // Modules & Blocks mostly:
+    // Not a course, user, system, category, see it it's something that should be listed under a course
+    // Modules & Blocks mostly.
     $path = explode('/', $cxdata->path);
-    array_shift($path); // get rid of the leading (empty) array item
-    array_pop($path); // Trim the contextid of the current context itself
+    array_shift($path); // Get rid of the leading (empty) array item.
+    array_pop($path); // Trim the contextid of the current context itself.
 
     $success = false; // Course not yet found.
-    // Look up through the parent contexts of this item until a course is found:
-    while(count($path)) {
+    // Look up through the parent contexts of this item until a course is found.
+    while (count($path)) {
         $contextid = array_pop($path);
         if (isset($courselookup[$contextid])) {
-            $success = true; //Course found
-            // record the files for the current context against the course
+            $success = true; // Course found.
+            // Record the files for the current context against the course.
             $courseid = $courselookup[$contextid]->courseid;
             if (!empty($coursesizes[$courseid])) {
                 $coursesizes[$courseid] += $contextsize;
@@ -121,9 +121,9 @@ $cxsizes->close();
 $courses = $DB->get_records_sql('select id, shortname from ' . $CFG->prefix. 'course');
 
 $coursetable = new html_table();
-$coursetable->align = array('right','right', 'right');
+$coursetable->align = array('right', 'right', 'right');
 $coursetable->head = array(get_string('course'),
-                           get_string('diskusage','report_coursesize'),
+                           get_string('diskusage', 'report_coursesize'),
                            get_string('backupsize', 'report_coursesize'));
 $coursetable->data = array();
 
@@ -133,7 +133,7 @@ foreach ($coursesizes as $courseid => $size) {
     $course = $courses[$courseid];
     $row = array();
     $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
-    $readablesize = number_format(ceil($size/1048576)) . "MB";
+    $readablesize = number_format(ceil($size / 1048576)) . "MB";
     $a = new stdClass;
     $a->bytes = $size;
     $a->shortname = $course->shortname;
@@ -141,16 +141,16 @@ foreach ($coursesizes as $courseid => $size) {
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
     $row[] = "<span title=\"$bytesused\">$readablesize</span>";
-    $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize/1048576)) . " MB</span>";
+    $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
     $coursetable->data[] = $row;
     unset($courses[$courseid]);
 }
 
-// Now add the courses that had no sitedata into the table
+// Now add the courses that had no sitedata into the table.
 $a = new stdClass;
 $a->bytes = 0;
 $a->backupbytes = 0;
-foreach($courses as $cid => $course) {
+foreach ($courses as $cid => $course) {
     $a->shortname = $course->shortname;
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $bytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
@@ -166,25 +166,25 @@ unset($courses);
 if (!empty($usersizes)) {
     arsort($usersizes);
     $usertable = new html_table();
-    $usertable->align = array('right','right');
-    $usertable->head = array(get_string('user'),'Disk Usage');
+    $usertable->align = array('right', 'right');
+    $usertable->head = array(get_string('user'), 'Disk Usage');
     $usertable->data = array();
     $usercount = 0;
     foreach ($usersizes as $userid => $size) {
         $usercount++;
-        $user = $DB->get_record('user', array('id'=>$userid));
+        $user = $DB->get_record('user', array('id' => $userid));
         $row = array();
         $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userid.'">' . fullname($user) . '</a>';
-        $row[] = number_format(ceil($size/1048576)) . "MB";
+        $row[] = number_format(ceil($size / 1048576)) . "MB";
         $usertable->data[] = $row;
-        if ($usercount >=10) {
+        if ($usercount >= 10) {
             break;
         }
     }
     unset($users);
 }
-$systemsizereadable = number_format(ceil($systemsize/1048576)) . "MB";
-$systembackupreadable = number_format(ceil($systembackupsize/1048576)) . "MB";
+$systemsizereadable = number_format(ceil($systemsize / 1048576)) . "MB";
+$systembackupreadable = number_format(ceil($systembackupsize / 1048576)) . "MB";
 
 // All the processing done, the rest is just output stuff.
 
@@ -225,7 +225,7 @@ function du ($dirname) {
             continue;
         }
         if ($item == '.' || $item == '..') {
-            // Ignore implied directories
+            // Ignore implied directories.
             continue;
         }
         $path = $dirname . '/' . $item;
