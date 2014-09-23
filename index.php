@@ -182,7 +182,7 @@ if (!empty($usersizes)) {
     arsort($usersizes);
     $usertable = new html_table();
     $usertable->align = array('right', 'right');
-    $usertable->head = array(get_string('user'), 'Disk Usage');
+    $usertable->head = array(get_string('user'), get_string('diskusage', 'report_coursesize'));
     $usertable->data = array();
     $usercount = 0;
     foreach ($usersizes as $userid => $size) {
