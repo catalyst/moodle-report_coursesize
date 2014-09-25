@@ -62,7 +62,7 @@ $totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
 // Generate a full list of context sitedata usage stats.
 $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
           ' FROM {files} f';
-$wherebackup = ' WHERE component like \'backup\'';
+$wherebackup = ' WHERE component like \'backup\' AND referencefileid IS NULL';
 $groupby = ' GROUP BY f.contextid';
 $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth, size.filessize, backupsize.filessize as backupsize' .
            ' FROM {context} cx ' .
