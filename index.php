@@ -64,13 +64,22 @@ $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
           ' FROM {files} f';
 $wherebackup = ' WHERE component like \'backup\'';
 $groupby = ' GROUP BY f.contextid';
-$sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth, size.filessize, backupsize.filessize as backupsize' .
+$sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth, 
+            size.filessize, backupsize.filessize as backupsize, sharedsize.sharedsize as sharedsize' .
            ' FROM {context} cx ' .
            ' INNER JOIN ( ' . $subsql . $groupby . ' ) size on cx.id=size.contextid' .
            ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
+           // Add shared size sql for data that is shared with other contexts.
+           ' LEFT JOIN ( SELECT dupfiles.contextid, sum(dupfiles.filesize) as sharedsize
+                           FROM (SELECT DISTINCT f.contextid, f.contenthash, f.filesize
+                                 FROM {files} f
+                                 JOIN {files} f2 ON f2.contenthash = f.contenthash
+                                WHERE f.contextid <> f2.contextid) dupfiles 
+                       GROUP BY dupfiles.contextid) sharedsize on cx.id=sharedsize.contextid '.
            ' ORDER by cx.depth ASC, cx.path ASC';
 $cxsizes = $DB->get_recordset_sql($sizesql);
 $coursesizes = array(); // To track a mapping of courseid to filessize.
+$coursesizesshared = array(); // To track courseid to shared size.
 $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
 $usersizes = array(); // To track a mapping of users to filesize.
 $systemsize = $systembackupsize = 0;
@@ -83,6 +92,7 @@ foreach ($cxsizes as $cxdata) {
     $contextlevel = $cxdata->contextlevel;
     $instanceid = $cxdata->instanceid;
     $contextsize = $cxdata->filessize;
+    $sharedsize = (empty($cxdata->sharedsize) ? 0 : $cxdata->sharedsize);
     $contextbackupsize = (empty($cxdata->backupsize) ? 0 : $cxdata->backupsize);
     if ($contextlevel == CONTEXT_USER) {
         $usersizes[$instanceid] = $contextsize;
@@ -92,6 +102,7 @@ foreach ($cxsizes as $cxdata) {
     if ($contextlevel == CONTEXT_COURSE) {
         $coursesizes[$instanceid] = $contextsize;
         $coursebackupsizes[$instanceid] = $contextbackupsize;
+        $coursesizesshared[$instanceid] = $sharedsize;
         continue;
     }
     if (($contextlevel == CONTEXT_SYSTEM) || ($contextlevel == CONTEXT_COURSECAT)) {
@@ -116,9 +127,11 @@ foreach ($cxsizes as $cxdata) {
             if (!empty($coursesizes[$courseid])) {
                 $coursesizes[$courseid] += $contextsize;
                 $coursebackupsizes[$courseid] += $contextbackupsize;
+                $coursesizesshared[$courseid] += $sharedsize;
             } else {
                 $coursesizes[$courseid] = $contextsize;
                 $coursebackupsizes[$courseid] = $contextbackupsize;
+                $coursesizesshared[$courseid] = $sharedsize;
             }
             break;
         }
@@ -134,9 +147,10 @@ $cxsizes->close();
 $courses = $DB->get_records('course', array(), '', 'id, shortname');
 
 $coursetable = new html_table();
-$coursetable->align = array('right', 'right', 'right');
+$coursetable->align = array('right', 'right', 'left', 'right');
 $coursetable->head = array(get_string('course'),
                            get_string('diskusage', 'report_coursesize'),
+                           get_string('sharedusage', 'report_coursesize'),
                            get_string('backupsize', 'report_coursesize'));
 $coursetable->data = array();
 
@@ -154,6 +168,7 @@ foreach ($coursesizes as $courseid => $size) {
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
     $row[] = "<span title=\"$bytesused\">$readablesize</span>";
+    $row[] = "<span title=\"\"> ".number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span>";
     $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
     $coursetable->data[] = $row;
     unset($courses[$courseid]);
