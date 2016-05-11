@@ -75,9 +75,9 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
            // SELECT DISTINCT f.contextid, f.contenthash, f.filesize, cx.path, cx2.path, cx2.contextlevel
            // FROM mdl_files f
            // JOIN mdl_context cx ON cx.id = f.contextid
-           // JOIN mdl_files f2 ON f2.contenthash = f.contenthash  // We join the table on itself to find other records with the same hash.
+           // JOIN mdl_files f2 ON f2.contenthash = f.contenthash  // Join the table to find other records with the same hash.
            // JOIN mdl_context cx2 ON cx2.id = f2.contextid
-           // WHERE f.contextid <> f2.contextid AND cx.depth > 2 // we ignore records that are stored higher than the course level context.
+           // WHERE f.contextid <> f2.contextid AND cx.depth > 2 // Ignore records that are stored higher than the course context.
            // get the first part of the file context path up to the 3rd slash (hopefully) and make sure the duplicate file
            // doesn't match the start of the context path of the main file.
            // AND cx2.path NOT LIKE SUBSTRING(cx.path, 0, 5+POSITION('/' in SUBSTRING(cx.path,5))) || '%'.
@@ -87,7 +87,7 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
                                  JOIN {context} cx ON cx.id = f.contextid
                                  JOIN {files} f2 ON f2.contenthash = f.contenthash
                                  JOIN {context} cx2 ON cx2.id = f2.contextid
-                                WHERE f.contextid <> f2.contextid AND cx.depth > 2 AND 
+                                WHERE f.contextid <> f2.contextid AND cx.depth > 2 AND
                                 cx2.path NOT LIKE '.
                                 $DB->sql_substr('cx.path', 0, 5 + $DB->sql_position('/', $DB->sql_substr('cx.path', 5))).
                                 ' || \'%\') dupfiles
