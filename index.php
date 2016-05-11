@@ -42,7 +42,8 @@ if (!defined('REPORT_COURSESIZE_UPDATETOTAL')) {
 
 
 $reportconfig = get_config('report_coursesize');
-if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated) && ($reportconfig->filessizeupdated > time() - REPORT_COURSESIZE_UPDATETOTAL)) {
+if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
+    && ($reportconfig->filessizeupdated > time() - REPORT_COURSESIZE_UPDATETOTAL)) {
     // Total files usage has been recently calculated, and stored by another process - use that.
     $totalusage = $reportconfig->filessize;
     $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
@@ -57,14 +58,14 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated) 
 $totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
 
 // TODO: display the sizes of directories (other than filedir) in dataroot
-//       eg old 1.9 course dirs, temp, sessions etc.
+// eg old 1.9 course dirs, temp, sessions etc.
 
 // Generate a full list of context sitedata usage stats.
 $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
           ' FROM {files} f';
 $wherebackup = ' WHERE component like \'backup\'';
 $groupby = ' GROUP BY f.contextid';
-$sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth, 
+$sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
             size.filessize, backupsize.filessize as backupsize, sharedsize.sharedsize as sharedsize' .
            ' FROM {context} cx ' .
            ' INNER JOIN ( ' . $subsql . $groupby . ' ) size on cx.id=size.contextid' .
@@ -74,7 +75,7 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
                            FROM (SELECT DISTINCT f.contextid, f.contenthash, f.filesize
                                  FROM {files} f
                                  JOIN {files} f2 ON f2.contenthash = f.contenthash
-                                WHERE f.contextid <> f2.contextid) dupfiles 
+                                WHERE f.contextid <> f2.contextid) dupfiles
                        GROUP BY dupfiles.contextid) sharedsize on cx.id=sharedsize.contextid '.
            ' ORDER by cx.depth ASC, cx.path ASC';
 $cxsizes = $DB->get_recordset_sql($sizesql);
