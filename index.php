@@ -90,7 +90,7 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
                                  JOIN {context} cx2 ON cx2.id = f2.contextid
                                 WHERE f.filesize > 0 AND f.contextid <> f2.contextid AND f.id <> f2.id AND
                                 f.filearea <> \'draft\' AND
-                                cx1.contextlevel >= 50 AND cx2.contextlevel >= 50 AND 
+                                cx1.contextlevel >= 50 AND cx2.contextlevel >= 50 AND
                                 cx1.depth > 2 AND cx2.depth > 2 AND cx1.path NOT LIKE '.
                                 $DB->sql_substr('cx2.path', 0, "6 + ". $substr2).
                                 ' || \'%\') dupfiles
