@@ -183,8 +183,8 @@ foreach ($coursesizes as $courseid => $size) {
     $a->backupbytes = $backupsize;
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
-    $row[] = "<span id=\"coursesize_".$course->shortname."\"title=\"$bytesused\">$readablesize</span>";
-    $row[] = "<span title=\"\"> ".number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span>";
+    $row[] = "<span id=\"coursesize_".$course->shortname."\" title=\"$bytesused\">$readablesize</span>";
+    $row[] = "<span id=\"coursesharedsize_".$course->shortname ."\"> ".number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span>";
     $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
     $coursetable->data[] = $row;
     unset($courses[$courseid]);
