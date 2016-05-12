@@ -84,13 +84,13 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
            ' LEFT JOIN ( SELECT dupfiles.contextid, sum(dupfiles.filesize) as sharedsize
                            FROM (SELECT DISTINCT f.contextid, f.contenthash, f.filesize
                                  FROM {files} f
-                                 JOIN {context} cx ON cx.id = f.contextid
+                                 JOIN {context} cx1 ON cx1.id = f.contextid
                                  JOIN {files} f2 ON f2.contenthash = f.contenthash
                                  JOIN {context} cx2 ON cx2.id = f2.contextid
                                 WHERE f.contextid <> f2.contextid AND f.id <> f2.id AND
-                                f2.filearea <> \'draft\' AND
-                                cx.depth > 2 AND cx2.path NOT LIKE '.
-                                $DB->sql_substr('cx.path', 0, 5 + $DB->sql_position('/', $DB->sql_substr('cx.path', 5))).
+                                f.filearea <> \'draft\' AND
+                                cx1.depth > 2 AND cx2.path NOT LIKE '.
+                                $DB->sql_substr('cx1.path', 0, 5 + $DB->sql_position('/', $DB->sql_substr('cx1.path', 5))).
                                 ' || \'%\') dupfiles
                        GROUP BY dupfiles.contextid) sharedsize on cx.id=sharedsize.contextid '.
            ' ORDER by cx.depth ASC, cx.path ASC';
