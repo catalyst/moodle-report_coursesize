@@ -26,4 +26,4 @@ Feature: Course size report calculates correct information
     When I log in as "admin"
     And I navigate to "Course size" node in "Site administration > Reports"
     Then I should see "File usage report"
-    And I should see "bytes used by course C1"
+    And I should see text matching "bytes used by course C1"
