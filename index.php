@@ -40,7 +40,6 @@ if (!defined('REPORT_COURSESIZE_UPDATETOTAL')) {
     define('REPORT_COURSESIZE_UPDATETOTAL', 1 * DAYSECS);
 }
 
-
 $reportconfig = get_config('report_coursesize');
 if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
     && ($reportconfig->filessizeupdated > time() - REPORT_COURSESIZE_UPDATETOTAL)) {
@@ -65,6 +64,8 @@ $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
           ' FROM {files} f';
 $wherebackup = ' WHERE component like \'backup\'';
 $groupby = ' GROUP BY f.contextid';
+$substr1 = $DB->sql_substr('cx2.path', 6);
+$substr2 = $DB->sql_position("'/'", $substr1);
 $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
             size.filessize, backupsize.filessize as backupsize, sharedsize.sharedsize as sharedsize' .
            ' FROM {context} cx ' .
@@ -80,17 +81,18 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
            // WHERE f.contextid <> f2.contextid AND cx.depth > 2 // Ignore records that are stored higher than the course context.
            // get the first part of the file context path up to the 3rd slash (hopefully) and make sure the duplicate file
            // doesn't match the start of the context path of the main file.
-           // AND cx2.path NOT LIKE SUBSTRING(cx.path, 0, 5+POSITION('/' in SUBSTRING(cx.path,5))) || '%'.
+           // AND cx2.path NOT LIKE SUBSTRING(cx.path, 0, 6+POSITION('/' in SUBSTRING(cx.path,6))) || '%'.
            ' LEFT JOIN ( SELECT dupfiles.contextid, sum(dupfiles.filesize) as sharedsize
                            FROM (SELECT DISTINCT f.contextid, f.contenthash, f.filesize
                                  FROM {files} f
                                  JOIN {context} cx1 ON cx1.id = f.contextid
                                  JOIN {files} f2 ON f2.contenthash = f.contenthash
                                  JOIN {context} cx2 ON cx2.id = f2.contextid
-                                WHERE f.contextid <> f2.contextid AND f.id <> f2.id AND
+                                WHERE f.filesize > 0 AND f.contextid <> f2.contextid AND f.id <> f2.id AND
                                 f.filearea <> \'draft\' AND
-                                cx1.depth > 2 AND cx2.path NOT LIKE '.
-                                $DB->sql_substr('cx1.path', 0, 5 + $DB->sql_position('/', $DB->sql_substr('cx1.path', 5))).
+                                cx1.contextlevel >= 50 AND cx2.contextlevel >= 50 AND 
+                                cx1.depth > 2 AND cx2.depth > 2 AND cx1.path NOT LIKE '.
+                                $DB->sql_substr('cx2.path', 0, "6 + ". $substr2).
                                 ' || \'%\') dupfiles
                        GROUP BY dupfiles.contextid) sharedsize on cx.id=sharedsize.contextid '.
            ' ORDER by cx.depth ASC, cx.path ASC';
