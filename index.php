@@ -64,24 +64,17 @@ $subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
           ' FROM {files} f';
 $wherebackup = ' WHERE component like \'backup\'';
 $groupby = ' GROUP BY f.contextid';
-$substr1 = $DB->sql_substr('cx2.path', 6);
-$substr2 = $DB->sql_position("'/'", $substr1);
+$reverse = 'reverse(cx2.path)';
+$poslast = $DB->sql_position("'/'", $reverse);
+$length =  $DB->sql_length('cx2.path');
+$substr =  $DB->sql_substr('cx2.path', 1, $length ." - " . $poslast);
+$likestr = $DB->sql_concat($substr, "'%'");
+
 $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
             size.filessize, backupsize.filessize as backupsize, sharedsize.sharedsize as sharedsize' .
            ' FROM {context} cx ' .
            ' INNER JOIN ( ' . $subsql . $groupby . ' ) size on cx.id=size.contextid' .
            ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
-           // Shared course size is complicated - here's an explanation of the query for future reference.
-           // Would be good for someone else to sanity check this at some point.
-           // SELECT DISTINCT f.contextid, f.contenthash, f.filesize, cx.path, cx2.path, cx2.contextlevel
-           // FROM mdl_files f
-           // JOIN mdl_context cx ON cx.id = f.contextid
-           // JOIN mdl_files f2 ON f2.contenthash = f.contenthash  // Join the table to find other records with the same hash.
-           // JOIN mdl_context cx2 ON cx2.id = f2.contextid
-           // WHERE f.contextid <> f2.contextid AND cx.depth > 2 // Ignore records that are stored higher than the course context.
-           // get the first part of the file context path up to the 3rd slash (hopefully) and make sure the duplicate file
-           // doesn't match the start of the context path of the main file.
-           // AND cx2.path NOT LIKE SUBSTRING(cx.path, 0, 6+POSITION('/' in SUBSTRING(cx.path,6))) || '%'.
            ' LEFT JOIN ( SELECT dupfiles.contextid, sum(dupfiles.filesize) as sharedsize
                            FROM (SELECT DISTINCT f.contextid, f.contenthash, f.filesize
                                  FROM {files} f
@@ -92,8 +85,7 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
                                 f.filearea <> \'draft\' AND
                                 cx1.contextlevel >= 50 AND cx2.contextlevel >= 50 AND
                                 cx1.depth > 2 AND cx2.depth > 2 AND cx1.path NOT LIKE '.
-                                $DB->sql_substr('cx2.path', 0, "6 + ". $substr2).
-                                ' || \'%\') dupfiles
+                                $likestr.') dupfiles
                        GROUP BY dupfiles.contextid) sharedsize on cx.id=sharedsize.contextid '.
            ' ORDER by cx.depth ASC, cx.path ASC';
 $cxsizes = $DB->get_recordset_sql($sizesql);
