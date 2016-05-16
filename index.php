@@ -66,8 +66,8 @@ $wherebackup = ' WHERE component like \'backup\'';
 $groupby = ' GROUP BY f.contextid';
 $reverse = 'reverse(cx2.path)';
 $poslast = $DB->sql_position("'/'", $reverse);
-$length =  $DB->sql_length('cx2.path');
-$substr =  $DB->sql_substr('cx2.path', 1, $length ." - " . $poslast);
+$length = $DB->sql_length('cx2.path');
+$substr = $DB->sql_substr('cx2.path', 1, $length ." - " . $poslast);
 $likestr = $DB->sql_concat($substr, "'%'");
 
 $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
@@ -179,7 +179,8 @@ foreach ($coursesizes as $courseid => $size) {
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
     $row[] = "<span id=\"coursesize_".$course->shortname."\" title=\"$bytesused\">$readablesize</span>";
-    $row[] = "<span id=\"coursesharedsize_".$course->shortname ."\"> ".number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span>";
+    $row[] = "<span id=\"coursesharedsize_".$course->shortname ."\"> ".
+        number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span>";
     $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
     $coursetable->data[] = $row;
     unset($courses[$courseid]);
