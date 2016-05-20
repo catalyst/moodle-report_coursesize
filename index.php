@@ -78,7 +78,10 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
            ' LEFT JOIN ( SELECT f.contextid, SUM(f.filesize) as sharedsize
                            FROM {files} f
                      INNER JOIN {context} cx ON f.contextid = cx.id 
-                          WHERE contenthash in (SELECT contenthash FROM {files} GROUP BY contenthash  HAVING count(*) > 1)
+                          WHERE contenthash in (SELECT contenthash 
+                                                  FROM {files}
+                                                 WHERE filesize > 0 AND filearea <> \'draft\' 
+                                              GROUP BY contenthash  HAVING count(*) > 1)
                                 AND f.filesize > 0
                                 AND f.filearea <> \'draft\'
                        GROUP BY f.contextid) sharedsize on cx.id=sharedsize.contextid '.
