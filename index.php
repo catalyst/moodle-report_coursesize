@@ -77,10 +77,10 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
            ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
            ' LEFT JOIN ( SELECT f.contextid, SUM(f.filesize) as sharedsize
                            FROM {files} f
-                     INNER JOIN {context} cx ON f.contextid = cx.id 
-                          WHERE contenthash in (SELECT contenthash 
+                     INNER JOIN {context} cx ON f.contextid = cx.id
+                          WHERE contenthash in (SELECT contenthash
                                                   FROM {files}
-                                                 WHERE filesize > 0 AND filearea <> \'draft\' 
+                                                 WHERE filesize > 0 AND filearea <> \'draft\'
                                               GROUP BY contenthash  HAVING count(*) > 1)
                                 AND f.filesize > 0
                                 AND f.filearea <> \'draft\'
