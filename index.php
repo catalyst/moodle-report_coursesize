@@ -75,18 +75,13 @@ $sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
            ' FROM {context} cx ' .
            ' INNER JOIN ( ' . $subsql . $groupby . ' ) size on cx.id=size.contextid' .
            ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
-           ' LEFT JOIN ( SELECT dupfiles.contextid, sum(dupfiles.filesize) as sharedsize
-                           FROM (SELECT DISTINCT f.contextid, f.contenthash, f.filesize
-                                 FROM {files} f
-                                 JOIN {context} cx1 ON cx1.id = f.contextid
-                                 JOIN {files} f2 ON f2.contenthash = f.contenthash
-                                 JOIN {context} cx2 ON cx2.id = f2.contextid
-                                WHERE f.filesize > 0 AND f.contextid <> f2.contextid AND f.id <> f2.id AND
-                                f.filearea <> \'draft\' AND
-                                cx1.contextlevel >= 50 AND cx2.contextlevel >= 50 AND
-                                cx1.depth > 2 AND cx2.depth > 2 AND cx1.path NOT LIKE '.
-                                $likestr.') dupfiles
-                       GROUP BY dupfiles.contextid) sharedsize on cx.id=sharedsize.contextid '.
+           ' LEFT JOIN ( SELECT f.contextid, SUM(f.filesize) as sharedsize
+                           FROM {files} f
+                     INNER JOIN {context} cx ON f.contextid = cx.id 
+                          WHERE contenthash in (SELECT contenthash FROM {files} GROUP BY contenthash  HAVING count(*) > 1)
+                                AND f.filesize > 0
+                                AND f.filearea <> \'draft\'
+                       GROUP BY f.contextid) sharedsize on cx.id=sharedsize.contextid '.
            ' ORDER by cx.depth ASC, cx.path ASC';
 $cxsizes = $DB->get_recordset_sql($sizesql);
 $coursesizes = array(); // To track a mapping of courseid to filessize.

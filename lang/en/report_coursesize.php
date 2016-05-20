@@ -39,5 +39,5 @@ $string['totalsitedata'] = 'Total sitedata usage: {$a}';
 $string['userstopnum'] = 'Users (top {$a})';
 $string['emptycourseshidden'] = 'Courses that do not use any file storage have been excluded from this report.';
 $string['coursesize_desc'] = '<p>This report only provides approximate values, if a file is used multiple times within a course or in multiple courses the report counts each instance even though Moodle only stores one physical version on disk.
-<br/>The Shared Usage column gives an approximate value of disk usage that is shared with other courses.</p>';
+<br/>The Shared Usage column gives an approximate value of shared disk usage.</p>';
 $string['sharedusage'] = 'Shared Usage';
