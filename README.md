@@ -1,5 +1,5 @@
 #Course Size Report 
- [![Build Status](https://travis-ci.org/danmarsden/moodle-report_coursesize.svg?branch=master)](https://travis-ci.org/danmarsden/moodle-report_coursesize)
+ [![Build Status](https://travis-ci.org/catalyst/moodle-report_coursesize.svg?branch=master)](https://travis-ci.org/catalyst/moodle-report_coursesize)
 
 Copyright 2014 Catalyst IT http://www.catalyst.net.nz
 
