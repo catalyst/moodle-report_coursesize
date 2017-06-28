@@ -169,6 +169,7 @@ foreach ($coursesizes as $courseid => $size) {
     $course = $courses[$courseid];
     $row = array();
     $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
+
     $readablesize = number_format(ceil($size / 1048576)) . "MB";
     $a = new stdClass;
     $a->bytes = $size;
@@ -176,9 +177,11 @@ foreach ($coursesizes as $courseid => $size) {
     $a->backupbytes = $backupsize;
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
+    $summarylink = new moodle_url('/report/coursesize/course.php', array('id' => $course->id));
+    $summary = html_writer::link($summarylink, get_string('coursesummary', 'report_coursesize'));
     $row[] = "<span id=\"coursesize_".$course->shortname."\" title=\"$bytesused\">$readablesize</span>";
     $row[] = "<span id=\"coursesharedsize_".$course->shortname ."\"> ".
-        number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span>";
+        number_format(ceil($coursesizesshared[$courseid] / 1048576)) . "MB</span> ". $summary;
     $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
     $coursetable->data[] = $row;
     unset($courses[$courseid]);

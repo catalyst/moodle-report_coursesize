@@ -29,7 +29,7 @@ $string['coursesize'] = 'Course size';
 $string['coursebytes'] = '{$a->bytes} bytes used by course {$a->shortname}';
 $string['coursebackupbytes'] = '{$a->backupbytes} bytes used for backup by course {$a->shortname}';
 $string['coursesize:view'] = 'View course size report';
-$string['diskusage'] = 'Disk Usage';
+$string['diskusage'] = 'Total';
 $string['nouserfiles'] = 'No user files listed.';
 $string['pluginname'] = 'Course size';
 $string['sizerecorded'] = '(Recorded {$a})';
@@ -41,3 +41,4 @@ $string['emptycourseshidden'] = 'Courses that do not use any file storage have b
 $string['coursesize_desc'] = '<p>This report only provides approximate values, if a file is used multiple times within a course or in multiple courses the report counts each instance even though Moodle only stores one physical version on disk.
 <br/>The Shared Usage column gives an approximate value of shared disk usage.</p>';
 $string['sharedusage'] = 'Shared Usage';
+$string['coursesummary'] = '(view stats)';
