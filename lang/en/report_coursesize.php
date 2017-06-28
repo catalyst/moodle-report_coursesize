@@ -28,6 +28,7 @@ $string['catsystembackupuse'] = 'System and category backup use is {$a}.';
 $string['coursesize'] = 'Course size';
 $string['coursebytes'] = '{$a->bytes} bytes used by course {$a->shortname}';
 $string['coursebackupbytes'] = '{$a->backupbytes} bytes used for backup by course {$a->shortname}';
+$string['coursereport'] = 'Summary of plugin types - NOTE this may be lower than the main course listing and is probably more accurate.';
 $string['coursesize:view'] = 'View course size report';
 $string['diskusage'] = 'Total';
 $string['nouserfiles'] = 'No user files listed.';

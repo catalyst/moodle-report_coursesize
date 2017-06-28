@@ -34,12 +34,13 @@ $course = $DB->get_record('course', array('id' => $courseid));
 $context = context_course::instance($course->id);
 $contextcheck = $context->path . '/%';
 
-$sizesql = "SELECT f.component, SUM(f.filesize) 
-              FROM {files} f 
-              JOIN {context} ctx ON f.contextid = ctx.id
-             WHERE ".$DB->sql_concat('ctx.path', "'\'")." LIKE ?
-                   AND f.filename != '.'
-                   GROUP BY f.component";
+$sizesql = "SELECT a.component, SUM(a.filesize) 
+              FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize 
+                    FROM {files} f 
+                    JOIN {context} ctx ON f.contextid = ctx.id
+                    WHERE ".$DB->sql_concat('ctx.path', "'\'")." LIKE ?
+                       AND f.filename != '.') a
+             GROUP BY a.component";
 
 $cxsizes = $DB->get_recordset_sql($sizesql, array($contextcheck));
 
@@ -63,6 +64,6 @@ $cxsizes->close();
 print $OUTPUT->header();
 
 print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'). " - ". format_string($course->fullname));
-
+print $OUTPUT->box(get_string('coursereport', 'report_coursesize'));
 print html_writer::table($coursetable);
 print $OUTPUT->footer();
