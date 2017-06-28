@@ -43,3 +43,4 @@ $string['coursesize_desc'] = '<p>This report only provides approximate values, i
 <br/>The Shared Usage column gives an approximate value of shared disk usage.</p>';
 $string['sharedusage'] = 'Shared Usage';
 $string['coursesummary'] = '(view stats)';
+$string['sharedusagecourse'] = 'Approx {$a} is shared with other courses.';

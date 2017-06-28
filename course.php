@@ -59,11 +59,33 @@ foreach ($cxsizes as $cxdata) {
 }
 $cxsizes->close();
 
+// Calculate filesize shared with other courses.
+$sizesql = "SELECT SUM(f.filesize)
+            FROM {files} f 
+            JOIN {context} ctx ON f.contextid = ctx.id
+            WHERE ".$DB->sql_concat('ctx.path', "'\'")." NOT LIKE ?
+                AND f.contenthash IN (SELECT DISTINCT f.contenthash 
+                                      FROM {files} f 
+                                      JOIN {context} ctx ON f.contextid = ctx.id
+                                     WHERE ".$DB->sql_concat('ctx.path', "'\'")." LIKE ?
+                                       AND f.filename != '.')
+           
+             ";
+$size = $DB->get_field_sql($sizesql, array($contextcheck, $contextcheck));
+if (!empty($size)) {
+    $size = number_format(ceil($size / 1048576)) . "MB";
+}
+
+
 // All the processing done, the rest is just output stuff.
 
 print $OUTPUT->header();
 
 print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'). " - ". format_string($course->fullname));
 print $OUTPUT->box(get_string('coursereport', 'report_coursesize'));
+if (!empty($size)) {
+    print $OUTPUT->box(get_string('sharedusagecourse', 'report_coursesize', $size));
+}
+
 print html_writer::table($coursetable);
 print $OUTPUT->footer();
