@@ -60,17 +60,15 @@ foreach ($cxsizes as $cxdata) {
 $cxsizes->close();
 
 // Calculate filesize shared with other courses.
-$sizesql = "SELECT SUM(f.filesize)
-            FROM {files} f 
+$sizesql = "SELECT SUM(filesize) FROM (SELECT DISTINCT contenthash, filesize
+            FROM {files} f
             JOIN {context} ctx ON f.contextid = ctx.id
             WHERE ".$DB->sql_concat('ctx.path', "'\'")." NOT LIKE ?
-                AND f.contenthash IN (SELECT DISTINCT f.contenthash 
-                                      FROM {files} f 
+                AND f.contenthash IN (SELECT DISTINCT f.contenthash
+                                      FROM {files} f
                                       JOIN {context} ctx ON f.contextid = ctx.id
                                      WHERE ".$DB->sql_concat('ctx.path', "'\'")." LIKE ?
-                                       AND f.filename != '.')
-           
-             ";
+                                       AND f.filename != '.')) b";
 $size = $DB->get_field_sql($sizesql, array($contextcheck, $contextcheck));
 if (!empty($size)) {
     $size = number_format(ceil($size / 1048576)) . "MB";
