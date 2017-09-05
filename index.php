@@ -24,8 +24,12 @@
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/coursecatlib.php');
 
 admin_externalpage_setup('reportcoursesize');
+
+// Dirty hack to filter by coursecategory - not very efficient.
+$coursecategory = optional_param('category', '', PARAM_INT);
 
 // If we should show or hide empty courses.
 if (!defined('REPORT_COURSESIZE_SHOWEMPTYCOURSES')) {
@@ -81,10 +85,26 @@ $coursesizes = array(); // To track a mapping of courseid to filessize.
 $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
 $usersizes = array(); // To track a mapping of users to filesize.
 $systemsize = $systembackupsize = 0;
+
+
+// This seems like an in-efficient method to filter by course categories as we are not excluding them from the main list.
 $coursesql = 'SELECT cx.id, c.id as courseid ' .
-             'FROM {course} c ' .
-             ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
-$courselookup = $DB->get_records_sql($coursesql);
+    'FROM {course} c ' .
+    ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
+$params = array();
+if (!empty($coursecategory)) {
+    $context = context_coursecat::instance($coursecategory);
+    $coursecat = coursecat::get($coursecategory);
+    $courses = $coursecat->get_courses(array('recursive' => true, 'idonly' => true));
+
+    if (!empty($courses)) {
+        list($insql, $inparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+        $coursesql .= ' AND c.id ' . $insql;
+        $params = array_merge($params, $inparams);
+    }
+}
+
+$courselookup = $DB->get_records_sql($coursesql, $params);
 
 foreach ($cxsizes as $cxdata) {
     $contextlevel = $cxdata->contextlevel;
@@ -214,16 +234,21 @@ $systembackupreadable = number_format(ceil($systembackupsize / 1048576)) . "MB";
 // All the processing done, the rest is just output stuff.
 
 print $OUTPUT->header();
-print $OUTPUT->heading(get_string("sitefilesusage", 'report_coursesize'));
-print '<strong>'.get_string("totalsitedata", 'report_coursesize', $totalusagereadable).'</strong> ';
-print get_string("sizerecorded", "report_coursesize", $totaldate) . "<br/><br/>\n";
-print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<br/>";
-print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
-if (!empty($CFG->filessizelimit)) {
-    print get_string("sizepermitted", 'report_coursesize', number_format($CFG->filessizelimit)). "<br/>\n";
+if (empty($coursecat)) {
+    print $OUTPUT->heading(get_string("sitefilesusage", 'report_coursesize'));
+    print '<strong>' . get_string("totalsitedata", 'report_coursesize', $totalusagereadable) . '</strong> ';
+    print get_string("sizerecorded", "report_coursesize", $totaldate) . "<br/><br/>\n";
+    print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<br/>";
+    print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
+    if (!empty($CFG->filessizelimit)) {
+        print get_string("sizepermitted", 'report_coursesize', number_format($CFG->filessizelimit)) . "<br/>\n";
+    }
 }
-
-print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'));
+$heading = get_string('coursesize', 'report_coursesize');
+if (!empty($coursecat)) {
+    $heading .= " - ".$coursecat->name;
+}
+print $OUTPUT->heading($heading);
 $desc = get_string('coursesize_desc', 'report_coursesize');
 
 
@@ -233,11 +258,15 @@ if (!REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
 print $OUTPUT->box($desc);
 
 print html_writer::table($coursetable);
-print $OUTPUT->heading(get_string('userstopnum', 'report_coursesize', REPORT_COURSESIZE_NUMBEROFUSERS));
-if (!isset($usertable)) {
-    print get_string('nouserfiles', 'report_coursesize');
-} else {
-    print html_writer::table($usertable);
+
+if (empty($coursecat)) {
+    print $OUTPUT->heading(get_string('userstopnum', 'report_coursesize', REPORT_COURSESIZE_NUMBEROFUSERS));
+
+    if (!isset($usertable)) {
+        print get_string('nouserfiles', 'report_coursesize');
+    } else {
+        print html_writer::table($usertable);
+    }
 }
 
 print $OUTPUT->footer();
