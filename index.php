@@ -92,20 +92,24 @@ $coursesql = 'SELECT cx.id, c.id as courseid ' .
     'FROM {course} c ' .
     ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
 $params = array();
+$courseparams = array();
+$extracoursesql = '';
 if (!empty($coursecategory)) {
     $context = context_coursecat::instance($coursecategory);
     $coursecat = coursecat::get($coursecategory);
     $courses = $coursecat->get_courses(array('recursive' => true, 'idonly' => true));
 
     if (!empty($courses)) {
-        list($insql, $inparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
-        $coursesql .= ' WHERE c.id ' . $insql;
-        $params = array_merge($params, $inparams);
+        list($insql, $courseparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
+        $extracoursesql = ' WHERE c.id ' . $insql;
     } else {
-        $coursesql .= ' WHERE c.id is null';
+        // Don't show any courses if category is selected but category has no courses.
+        // This stuff really needs a rewrite!
+        $extracoursesql = ' WHERE c.id is null';
     }
 }
-
+$coursesql .= $extracoursesql;
+$params = array_merge($params, $courseparams);
 $courselookup = $DB->get_records_sql($coursesql, $params);
 
 foreach ($cxsizes as $cxdata) {
@@ -160,7 +164,8 @@ foreach ($cxsizes as $cxdata) {
     }
 }
 $cxsizes->close();
-$courses = $DB->get_records('course', array(), '', 'id, shortname');
+$sql = "SELECT id, shortname FROM {course} c".$extracoursesql;
+$courses = $DB->get_records_sql($sql, $courseparams);
 
 $coursetable = new html_table();
 $coursetable->align = array('right', 'right', 'left');
@@ -173,6 +178,9 @@ arsort($coursesizes);
 $totalsize = 0;
 $totalbackupsize = 0;
 foreach ($coursesizes as $courseid => $size) {
+    if (empty($courses[$courseid])) {
+        continue;
+    }
     $backupsize = $coursebackupsizes[$courseid];
     $totalsize = $totalsize + $size;
     $totalbackupsize  = $totalbackupsize + $backupsize;
