@@ -168,8 +168,12 @@ $coursetable->head = array(get_string('course'),
 $coursetable->data = array();
 
 arsort($coursesizes);
+$totalsize = 0;
+$totalbackupsize = 0;
 foreach ($coursesizes as $courseid => $size) {
     $backupsize = $coursebackupsizes[$courseid];
+    $totalsize = $totalsize + $size;
+    $totalbackupsize  = $totalbackupsize + $backupsize;
     $course = $courses[$courseid];
     $row = array();
     $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
@@ -205,6 +209,13 @@ if (REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
         $coursetable->data[] = $row;
     }
 }
+// Now add the totals to the bottom of the table.
+$coursetable->data[] = array(); // Add empty row before total.
+$row = array();
+$row[] = get_string('total');
+$row[] = number_format(ceil($totalsize / 1048576)) . "MB";
+$row[] = number_format(ceil($totalbackupsize / 1048576)) . "MB";
+$coursetable->data[] = $row;
 unset($courses);
 
 
