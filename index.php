@@ -99,8 +99,10 @@ if (!empty($coursecategory)) {
 
     if (!empty($courses)) {
         list($insql, $inparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
-        $coursesql .= ' AND c.id ' . $insql;
+        $coursesql .= ' WHERE c.id ' . $insql;
         $params = array_merge($params, $inparams);
+    } else {
+        $coursesql .= ' WHERE c.id is null';
     }
 }
 
