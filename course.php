@@ -38,7 +38,7 @@ $sizesql = "SELECT a.component, SUM(a.filesize)
               FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize 
                     FROM {files} f 
                     JOIN {context} ctx ON f.contextid = ctx.id
-                    WHERE ".$DB->sql_concat('ctx.path', "'\'")." LIKE ?
+                    WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
                        AND f.filename != '.') a
              GROUP BY a.component";
 
@@ -63,11 +63,11 @@ $cxsizes->close();
 $sizesql = "SELECT SUM(filesize) FROM (SELECT DISTINCT contenthash, filesize
             FROM {files} f
             JOIN {context} ctx ON f.contextid = ctx.id
-            WHERE ".$DB->sql_concat('ctx.path', "'\'")." NOT LIKE ?
+            WHERE ".$DB->sql_concat('ctx.path', "'/'")." NOT LIKE ?
                 AND f.contenthash IN (SELECT DISTINCT f.contenthash
                                       FROM {files} f
                                       JOIN {context} ctx ON f.contextid = ctx.id
-                                     WHERE ".$DB->sql_concat('ctx.path', "'\'")." LIKE ?
+                                     WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
                                        AND f.filename != '.')) b";
 $size = $DB->get_field_sql($sizesql, array($contextcheck, $contextcheck));
 if (!empty($size)) {
