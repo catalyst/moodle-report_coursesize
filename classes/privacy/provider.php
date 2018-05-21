@@ -15,17 +15,34 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information
+ * Privacy Subsystem implementation for report_courseoverview.
  *
  * @package    report_coursesize
- * @copyright  2014 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @copyright  2018 Catalyst IT
+ * @author     Dan Marsden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace report_coursesize\privacy;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2018052100;
-$plugin->requires = 2017111300; // Requires 3.4.
-$plugin->component = 'report_coursesize';
-$plugin->release = '2.2';
-$plugin->maturity  = MATURITY_STABLE;
+/**
+ * Privacy Subsystem for report_coursesize implementing null_provider.
+ *
+ * @copyright  2018 Catalyst IT
+ * @author     Dan Marsden
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class provider implements \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
+}
