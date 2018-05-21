@@ -34,9 +34,9 @@ $course = $DB->get_record('course', array('id' => $courseid));
 $context = context_course::instance($course->id);
 $contextcheck = $context->path . '/%';
 
-$sizesql = "SELECT a.component, SUM(a.filesize) 
-              FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize 
-                    FROM {files} f 
+$sizesql = "SELECT a.component, SUM(a.filesize)
+              FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize
+                    FROM {files} f
                     JOIN {context} ctx ON f.contextid = ctx.id
                     WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
                        AND f.filename != '.') a
