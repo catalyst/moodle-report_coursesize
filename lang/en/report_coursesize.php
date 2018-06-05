@@ -44,3 +44,4 @@ $string['sharedusage'] = 'Shared Usage';
 $string['coursesummary'] = '(view stats)';
 $string['sharedusagecourse'] = 'Approx {$a} is shared with other courses.';
 $string['privacy:metadata'] = 'The Course size plugin does not store any personal data.';
+$string['exportcsv'] = 'Export CSV';

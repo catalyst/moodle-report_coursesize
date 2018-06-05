@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2018052100;
+$plugin->version  = 2018060400;
 $plugin->requires = 2017111300; // Requires 3.4.
 $plugin->component = 'report_coursesize';
 $plugin->release = '2.2';
