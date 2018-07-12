@@ -34,7 +34,7 @@ $course = $DB->get_record('course', array('id' => $courseid));
 $context = context_course::instance($course->id);
 $contextcheck = $context->path . '/%';
 
-$sizesql = "SELECT a.component, SUM(a.filesize)
+$sizesql = "SELECT a.component, SUM(a.filesize) as filesize
               FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize
                     FROM {files} f
                     JOIN {context} ctx ON f.contextid = ctx.id
@@ -53,7 +53,7 @@ $coursetable->data = array();
 foreach ($cxsizes as $cxdata) {
     $row = array();
     $row[] = $cxdata->component;
-    $row[] = number_format(ceil($cxdata->sum / 1048576)) . "MB";
+    $row[] = number_format(ceil($cxdata->filesize / 1048576)) . "MB";
 
     $coursetable->data[] = $row;
 }
