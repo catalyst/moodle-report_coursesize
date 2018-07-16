@@ -171,7 +171,7 @@ $courses = $DB->get_records_sql($sql, $courseparams);
 
 $coursetable = new html_table();
 $coursetable->align = array('right', 'right', 'left');
-$coursetable->head = array(get_string('course'), 
+$coursetable->head = array(get_string('course'),
                            get_string('category'),
                            get_string('diskusage', 'report_coursesize'),
                            get_string('backupsize', 'report_coursesize'));
@@ -209,7 +209,8 @@ foreach ($coursesizes as $courseid => $size) {
     $row[] = "<span id=\"coursesize_".$course->shortname."\" title=\"$bytesused\">$readablesize</span>".$summary;
     $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
     $coursetable->data[] = $row;
-    $downloaddata[] = array($course->shortname,$course->name,str_replace(',','',$readablesize),str_replace(',','',number_format(ceil($backupsize / 1048576)) . "MB"));
+    $downloaddata[] = array($course->shortname, $course->name, str_replace(',', '', $readablesize),
+                            str_replace(',', '', number_format(ceil($backupsize / 1048576)) . "MB"));
     unset($courses[$courseid]);
 }
 
@@ -238,7 +239,8 @@ $row[] = '';
 $row[] = number_format(ceil($totalsize / 1048576)) . "MB";
 $row[] = number_format(ceil($totalbackupsize / 1048576)) . "MB";
 $coursetable->data[] = $row;
-$downloaddata[] = array(get_string('total'),'',str_replace(',','',number_format(ceil($totalsize / 1048576))) . "MB", str_replace(',','',number_format(ceil($totalbackupsize / 1048576)) . "MB"));
+$downloaddata[] = array(get_string('total'), '', str_replace(',', '', number_format(ceil($totalsize / 1048576))) .
+                        "MB", str_replace(',', '', number_format(ceil($totalbackupsize / 1048576)) . "MB"));
 unset($courses);
 
 
@@ -268,25 +270,24 @@ $systembackupreadable = number_format(ceil($systembackupsize / 1048576)) . "MB";
 
 // Add in Course Cat including dropdown to filter.
 
-   $url = '';
-   $catlookup = $DB->get_records_sql('select id,name from {course_categories}');
-   $options = array('0' => 'All Courses' );
-   foreach($catlookup as $cat){
-       $options[$cat->id] = $cat->name;
-   }
+$url = '';
+$catlookup = $DB->get_records_sql('select id,name from {course_categories}');
+$options = array('0' => 'All Courses' );
+foreach ($catlookup as $cat) {
+    $options[$cat->id] = $cat->name;
+}
 
 // Add in download option. Exports CSV.
 
-  if ($download == 1){
-      $downloadfilename = clean_filename ( "export_csv" );
-      $csvexport = new csv_export_writer ( 'commer' );
-      $csvexport->set_filename ( $downloadfilename );
-
-      foreach ($downloaddata as $data){
-          $csvexport->add_data ($data);
-      }
-      $csvexport->download_file ();
-   }
+if ($download == 1) {
+    $downloadfilename = clean_filename ( "export_csv" );
+    $csvexport = new csv_export_writer ( 'commer' );
+    $csvexport->set_filename ( $downloadfilename );
+    foreach ($downloaddata as $data) {
+        $csvexport->add_data ($data);
+    }
+    $csvexport->download_file ();
+}
 
 // All the processing done, the rest is just output stuff.
 
@@ -314,8 +315,9 @@ if (!REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
 }
 print $OUTPUT->box($desc)."<br/>";
 
-$filter =  $OUTPUT->single_select($url, 'category', $options);
-$filter .= $OUTPUT->single_button(new moodle_url('index.php', array('download' => 1, 'category' => $coursecategory )), get_string('exportcsv', 'report_coursesize'), 'post', ['class' => 'coursesizedownload']);
+$filter = $OUTPUT->single_select($url, 'category', $options);
+$filter .= $OUTPUT->single_button(new moodle_url('index.php', array('download' => 1, 'category' => $coursecategory )),
+                                  get_string('exportcsv', 'report_coursesize'), 'post', ['class' => 'coursesizedownload']);
 
 print $OUTPUT->box($filter)."<br/>";
 
