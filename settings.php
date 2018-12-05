@@ -24,9 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$ADMIN->add('reports', new admin_externalpage('reportcoursesize', get_string('pluginname', 'report_coursesize'),
+$ADMIN->add('reports', new admin_externalpage('reportcoursesizepage', get_string('pluginname', 'report_coursesize'),
                                               "$CFG->wwwroot/report/coursesize/index.php", 'report/coursesize:view'));
 
-// No report settings.
-$settings = null;
-
+$settings->add(new admin_setting_configselect('report_coursesize/calcmethod',
+    new lang_string('calcmethod', 'report_coursesize'),
+    new lang_string('calcmethodhelp', 'report_coursesize'),
+    'cron', array('cron' => new lang_string('calcmethodcron', 'report_coursesize'),
+        'live' => new lang_string('calcmethodlive', 'report_coursesize'))));

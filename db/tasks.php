@@ -15,17 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information
+ * report_coursesize tasks
  *
- * @package    report_coursesize
- * @copyright  2014 Catalyst IT {@link http://www.catalyst.net.nz}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   report_coursesize
+ * @author    Matt Porritt <mattp@catalyst-au.net>
+ * @copyright Catalyst IT
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2018120206;
-$plugin->requires = 2017111300; // Requires 3.4.
-$plugin->component = 'report_coursesize';
-$plugin->release = '2.2';
-$plugin->maturity  = MATURITY_STABLE;
+$tasks = array(
+    array(
+        'classname' => 'report_coursesize\task\report_async',
+        'blocking'  => 0,
+        'minute'    => '*',
+        'hour'      => '1',
+        'day'       => '*',
+        'dayofweek' => '*',
+        'month'     => '*'
+    ),
+);
+
