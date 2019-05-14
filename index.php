@@ -24,7 +24,6 @@
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
-require_once($CFG->libdir.'/coursecatlib.php');
 
 admin_externalpage_setup('reportcoursesize');
 
