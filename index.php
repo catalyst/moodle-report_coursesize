@@ -97,7 +97,7 @@ $courseparams = array();
 $extracoursesql = '';
 if (!empty($coursecategory)) {
     $context = context_coursecat::instance($coursecategory);
-    $coursecat = coursecat::get($coursecategory);
+    $coursecat = core_course_category::get($coursecategory);
     $courses = $coursecat->get_courses(array('recursive' => true, 'idonly' => true));
 
     if (!empty($courses)) {
@@ -313,7 +313,7 @@ $desc = get_string('coursesize_desc', 'report_coursesize');
 if (!REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
     $desc .= ' '. get_string('emptycourseshidden', 'report_coursesize');
 }
-print $OUTPUT->box($desc)."<br/>";
+print $OUTPUT->box($desc);
 
 $filter = $OUTPUT->single_select($url, 'category', $options);
 $filter .= $OUTPUT->single_button(new moodle_url('index.php', array('download' => 1, 'category' => $coursecategory )),
