@@ -26,7 +26,7 @@ Feature: Course size report calculates correct information
   @javascript
   Scenario: Check coursesize report for course 1
     When I log in as "admin"
-    And I navigate to "Course size" node in "Site administration > Reports"
+    And I navigate to "Reports > Course size" in site administration
     Then I should see "File usage report"
     And I should see "1MB" in the "#coursesize_C1" "css_element"
     And I should not see "C2"
