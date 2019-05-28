@@ -42,7 +42,7 @@ class report_async extends \core\task\scheduled_task {
      * Get task name
      */
     public function get_name() {
-        return get_string('pluginname', 'report_async');
+        return get_string('pluginname', 'report_coursesize');
     }
 
     /**
