@@ -52,9 +52,15 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
     $totalusage = $reportconfig->filessize;
     $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
 } else {
+    // Check if the path ends with a "/" otherwise an exception will be thrown
+    $sitedatadir = $CFG->dataroot;
+    if (is_dir($sitedatadir)) {
+        $sitedatadir .= '/';
+    }
+
     // Total files usage either hasn't been stored, or is out of date.
     $totaldate = date("Y-m-d H:i", time());
-    $totalusage = get_directory_size($CFG->dataroot);
+    $totalusage = get_directory_size($sitedatadir);
     set_config('filessize', $totalusage, 'report_coursesize');
     set_config('filessizeupdated', time(), 'report_coursesize');
 }
