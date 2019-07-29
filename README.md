@@ -12,3 +12,5 @@ There are 2 known shortcomings with this plugin
   report to inform the user if they delete the course or files within the course they will not free that amount from disk.
 
 It should be possible to improve the report to address these issues - we'd greatly appreciate any patches to improve the plugin!
+
+This branch works on (but is not limited to) Totara versions 2.6 through to 12.
