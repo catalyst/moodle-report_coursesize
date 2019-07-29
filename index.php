@@ -55,7 +55,10 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
     // Check if the path ends with a "/" otherwise an exception will be thrown
     $sitedatadir = $CFG->dataroot;
     if (is_dir($sitedatadir)) {
-        $sitedatadir .= '/';
+        // Only append a "/" if it doesn't already end with one
+        if (substr($sitedatadir, -1) !== '/') {
+            $sitedatadir .= '/';
+        }
     }
 
     // Total files usage either hasn't been stored, or is out of date.
