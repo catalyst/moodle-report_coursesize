@@ -15,8 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Course breakdown.
+ * WS functions
  *
+ * Class report_coursesize_external class for ws functions
  * @package    report_coursesize
  * @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,9 +29,6 @@ require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->libdir . "/adminlib.php");
 require_once($CFG->dirroot . "/report/coursesize/lib.php");
 
-/**
- * Class report_coursesize_external class for ws functions
- */
 class report_coursesize_external extends external_api {
 
     /**
@@ -103,7 +101,6 @@ class report_coursesize_external extends external_api {
 
         $coursesizes = array(); // To track a mapping of courseid to filessize.
         $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
-        $usersizes = array(); // To track a mapping of users to filesize.
         $systemsize = $systembackupsize = 0;
         $coursesql = 'SELECT cx.id, c.id as courseid ' .
             'FROM {course} c ' .
