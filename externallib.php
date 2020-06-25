@@ -104,8 +104,8 @@ class report_coursesize_external extends external_api {
 
         list($totalusage, $totaldate) = report_coursesize_totalusage(false);
 
-        $coursesizes = array(); // To track a mapping of courseid to filessize.
-        $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
+        $csizes = array(); // To track a mapping of courseid to filessize.
+        $cbackupsizes = array(); // To track a mapping of courseid to backup filessize.
         $systemsize = $systembackupsize = 0;
         $coursesql = 'SELECT cx.id, c.id as courseid ' .
             'FROM {course} c ' .
@@ -114,19 +114,19 @@ class report_coursesize_external extends external_api {
         $cxsizes = report_coursesize_cxsizes();
 
         foreach ($cxsizes as $cxdata) {
-            $contextlevel = $cxdata->contextlevel;
-            $instanceid = $cxdata->instanceid;
-            $contextsize = $cxdata->filessize;
-            $contextbackupsize = (empty($cxdata->backupsize) ? 0 : $cxdata->backupsize);
+            $cxlevel = $cxdata->contextlevel;
+            $instance = $cxdata->instanceid;
+            $cxsize = $cxdata->filessize;
+            $cxtbackupsize = (empty($cxdata->backupsize) ? 0 : $cxdata->backupsize);
 
-            if ($contextlevel == CONTEXT_COURSE) {
-                $coursesizes[$instanceid] = $contextsize;
-                $coursebackupsizes[$instanceid] = $contextbackupsize;
+            if ($cxlevel == CONTEXT_COURSE) {
+                $csizes[$instance] = $cxsize;
+                $cbackupsizes[$instance] = $cxtbackupsize;
                 continue;
             }
-            if (($contextlevel == CONTEXT_SYSTEM) || ($contextlevel == CONTEXT_COURSECAT)) {
-                $systemsize = $contextsize;
-                $systembackupsize = $contextbackupsize;
+            if (($cxlevel == CONTEXT_SYSTEM) || ($cxlevel == CONTEXT_COURSECAT)) {
+                $systemsize = $cxsize;
+                $systembackupsize = $cxtbackupsize;
                 continue;
             }
             $path = explode('/', $cxdata->path);
@@ -135,17 +135,17 @@ class report_coursesize_external extends external_api {
 
             $success = false; // Course not yet found.
             while (count($path)) {
-                $contextid = array_pop($path);
-                if (isset($courselookup[$contextid])) {
+                $cxid = array_pop($path);
+                if (isset($courselookup[$cxid])) {
                     $success = true; // Course found.
                     // Record the files for the current context against the course.
-                    $courseid = $courselookup[$contextid]->courseid;
-                    if (!empty($coursesizes[$courseid])) {
-                        $coursesizes[$courseid] += $contextsize;
-                        $coursebackupsizes[$courseid] += $contextbackupsize;
+                    $courseid = $courselookup[$cxid]->courseid;
+                    if (!empty($csizes[$courseid])) {
+                        $csizes[$courseid] += $cxsize;
+                        $cbackupsizes[$courseid] += $cxtbackupsize;
                     } else {
-                        $coursesizes[$courseid] = $contextsize;
-                        $coursebackupsizes[$courseid] = $contextbackupsize;
+                        $csizes[$courseid] = $cxsize;
+                        $cbackupsizes[$courseid] = $cxtbackupsize;
                     }
                     break;
                 }
@@ -153,8 +153,8 @@ class report_coursesize_external extends external_api {
             if (!$success) {
                 // Didn't find a course
                 // A module or block not under a course?
-                $systemsize += $contextsize;
-                $systembackupsize += $contextbackupsize;
+                $systemsize += $cxsize;
+                $systembackupsize += $cxtbackupsize;
             }
         }
 
@@ -163,14 +163,14 @@ class report_coursesize_external extends external_api {
         $courses = $DB->get_records_sql($sql, array());
 
         $coursedata = array();
-        foreach ($coursesizes as $courseid => $size) {
+        foreach ($csizes as $courseid => $size) {
             $course = $courses[$courseid];
             $coursedata[] = array(
                 'id' => $course->id,
                 'name' => $course->shortname,
                 'category' => $course->name,
                 'total' => number_format(ceil($size / 1048576)),
-                'backup' => $coursebackupsizes[$courseid]
+                'backup' => $cbackupsizes[$courseid]
             );
         }
 
