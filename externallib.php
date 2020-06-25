@@ -32,14 +32,20 @@ class report_coursesize_external extends external_api {
 
     /**
      * Returns description of method parameters
-     * @return external_function_parameters
+     * @return external_function_parameters Return empty parameter array for WS function
      */
     public static function site_parameters() {
         return new external_function_parameters(array());
     }
 
+    /**
+     * WS function implementation for all site size
+     *
+     * @return array for the size size in MB
+     * @throws dml_exception
+     */
     public static function site() {
-        global $CFG, $DB;
+        global $DB;
 
         $courses = $DB->get_records('course');
         $sumsize = 0;
@@ -60,16 +66,33 @@ class report_coursesize_external extends external_api {
         return ['size' => $return];
     }
 
+    /**
+     * Site size return structure implementation
+     *
+     * @return external_single_structure Site service return structure implementation
+     */
     public static function site_returns() {
         return new external_single_structure([
             'size' => new external_value(PARAM_FLOAT, 'Total courses size in MB')
         ]);
     }
 
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters Return empty parameter array for WS function
+     */
     public static function site_details_parameters() {
         return new external_function_parameters(array());
     }
 
+    /**
+     * Site details WS function implementation
+     *
+     * @return array array of size and courses data
+     * @throws coding_exception A Coding specific exception is thrown for any errors.
+     * @throws dml_exception A DML specific exception is thrown for any errors.
+     */
     public static function site_details() {
         global $DB;
 
@@ -90,11 +113,7 @@ class report_coursesize_external extends external_api {
             $instanceid = $cxdata->instanceid;
             $contextsize = $cxdata->filessize;
             $contextbackupsize = (empty($cxdata->backupsize) ? 0 : $cxdata->backupsize);
-            if ($contextlevel == CONTEXT_USER) {
-                $usersizes[$instanceid] = $contextsize;
-                $userbackupsizes[$instanceid] = $contextbackupsize;
-                continue;
-            }
+
             if ($contextlevel == CONTEXT_COURSE) {
                 $coursesizes[$instanceid] = $contextsize;
                 $coursebackupsizes[$instanceid] = $contextbackupsize;
@@ -105,14 +124,11 @@ class report_coursesize_external extends external_api {
                 $systembackupsize = $contextbackupsize;
                 continue;
             }
-            // Not a course, user, system, category, see it it's something that should be listed under a course
-            // Modules & Blocks mostly.
             $path = explode('/', $cxdata->path);
             array_shift($path); // Get rid of the leading (empty) array item.
             array_pop($path); // Trim the contextid of the current context itself.
 
             $success = false; // Course not yet found.
-            // Look up through the parent contexts of this item until a course is found.
             while (count($path)) {
                 $contextid = array_pop($path);
                 if (isset($courselookup[$contextid])) {
@@ -162,6 +178,11 @@ class report_coursesize_external extends external_api {
         );
     }
 
+    /**
+     * Implement site details function return stucture
+     *
+     * @return external_single_structure Return structure definition
+     */
     public static function site_details_returns() {
         return new external_single_structure(array(
             'total_sitedata' => new external_value(PARAM_FLOAT, "Total sitedata usage in MB"),

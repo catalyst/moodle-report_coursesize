@@ -27,11 +27,10 @@ defined('MOODLE_INTERNAL') || die;
 /**
  * Calculate filesize shared with other courses.
  *
- * @param $contextcheck
- * @return bool|mixed
+ * @param string $contextcheck Context for check files
+ * @return bool|mixed|void Return size or none
  * @throws dml_exception
  */
-
 function report_coursesize_calculate_filesize_shared_courses($contextcheck) {
     global $DB;
 
@@ -48,13 +47,16 @@ function report_coursesize_calculate_filesize_shared_courses($contextcheck) {
     if (!empty($size)) {
         return $size;
     }
+
+    return;
 }
 
 /**
  * Get CX sizes
  *
- * @throws coding_exception
- * @throws dml_exception
+ * @throws coding_exception A Coding specific exception is thrown for any errors.
+ * @throws dml_exception A DML specific exception is thrown for any errors.
+ * @return moodle_recordset A moodle_recordset instance.
  */
 function report_coursesize_cxsizes() {
     global $DB;
@@ -81,8 +83,8 @@ function report_coursesize_cxsizes() {
 /**
  * Get total usage
  *
- * @param bool $returnWithKeys
- * @return array
+ * @param bool $returnwithkeys Return is simple array or with special keys
+ * @return array Return total usage in mb and date time
  */
 function report_coursesize_totalusage($returnwithkeys = true) {
     global $CFG;
