@@ -26,6 +26,11 @@ env:
     - DB=pgsql
     - DB=mysqli
 
+dist: xenial
+
+services:
+  - mysql
+
 before_install:
   - phpenv config-rm xdebug.ini
   - nvm install 8.9
