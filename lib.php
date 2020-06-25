@@ -84,7 +84,7 @@ function report_coursesize_cxsizes() {
  * @param bool $returnWithKeys
  * @return array
  */
-function report_coursesize_totalusage($returnWithKeys = true) {
+function report_coursesize_totalusage($returnwithkeys = true) {
     global $CFG;
     // If we should show or hide empty courses.
     if (!defined('REPORT_COURSESIZE_SHOWEMPTYCOURSES')) {
@@ -102,14 +102,11 @@ function report_coursesize_totalusage($returnWithKeys = true) {
     $reportconfig = get_config('report_coursesize');
     if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
         && ($reportconfig->filessizeupdated > time() - REPORT_COURSESIZE_UPDATETOTAL)) {
-        // Total files usage has been recently calculated, and stored by another process - use that.
         $totalusage = $reportconfig->filessize;
         $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
     } else {
-        // Check if the path ends with a "/" otherwise an exception will be thrown
         $sitedatadir = $CFG->dataroot;
         if (is_dir($sitedatadir)) {
-            // Only append a "/" if it doesn't already end with one
             if (substr($sitedatadir, -1) !== '/') {
                 $sitedatadir .= '/';
             }
@@ -122,7 +119,7 @@ function report_coursesize_totalusage($returnWithKeys = true) {
         set_config('filessizeupdated', time(), 'report_coursesize');
     }
 
-    if($returnWithKeys) {
+    if ($returnwithkeys) {
         return array(
             'totalusage' => $totalusage,
             'totaldate' => $totaldate

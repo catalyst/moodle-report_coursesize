@@ -21,6 +21,9 @@
  * @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die;
+
 require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->libdir . "/adminlib.php");
 require_once($CFG->dirroot . "/report/coursesize/lib.php");
@@ -37,8 +40,6 @@ class report_coursesize_external extends external_api {
 
     public static function site() {
         global $CFG, $DB;
-
-
 
         $courses = $DB->get_records('course');
         $sumsize = 0;
