@@ -28,6 +28,9 @@ require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->libdir . "/adminlib.php");
 require_once($CFG->dirroot . "/report/coursesize/lib.php");
 
+/**
+ * Class report_coursesize_external class for ws functions
+ */
 class report_coursesize_external extends external_api {
 
     /**
