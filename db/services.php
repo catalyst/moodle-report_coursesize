@@ -22,13 +22,22 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 // We defined the web service functions to install.
 $functions = array(
-    'local_coursesize_site' => array(
+    'report_coursesize_site' => array(
         'classname' => 'report_coursesize_external',
         'methodname' => 'site',
         'classpath' => 'report/coursesize/externallib.php',
         'description' => 'Return full site size',
+        'type' => 'read',
+    ),
+    'report_coursesize_site_details' => array(
+        'classname' => 'report_coursesize_external',
+        'methodname' => 'site_details',
+        'classpath' => 'report/coursesize/externallib.php',
+        'description' => 'Return full site size with details',
         'type' => 'read',
     )
 );
@@ -36,7 +45,7 @@ $functions = array(
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
 $services = array(
     'coursesizeservice' => array(
-        'functions' => array('local_coursesize_site'),
+        'functions' => array('report_coursesize_site', 'report_coursesize_site_details'),
         'restrictedusers' => 0,
         'enabled' => 1,
     )

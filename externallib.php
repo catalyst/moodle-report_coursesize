@@ -15,14 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* Course breakdown.
-*
-* @package    report_coursesize
-* @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
-* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-*/
+ * Course breakdown.
+ *
+ * @package    report_coursesize
+ * @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 require_once($CFG->libdir . "/externallib.php");
-require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir . "/adminlib.php");
+require_once($CFG->dirroot . "/report/coursesize/lib.php");
 
 class report_coursesize_external extends external_api {
 
@@ -31,39 +32,29 @@ class report_coursesize_external extends external_api {
      * @return external_function_parameters
      */
     public static function site_parameters() {
-        return new external_function_parameters(array(
-
-        ));
+        return new external_function_parameters(array());
     }
 
     public static function site() {
         global $CFG, $DB;
+
+
+
         $courses = $DB->get_records('course');
-        $sum_size = 0;
-        foreach($courses as $course) {
+        $sumsize = 0;
+        foreach ($courses as $course) {
 
             $context = context_course::instance($course->id);
             $contextcheck = $context->path . '/%';
 
-            $sizesql = "SELECT SUM(filesize) FROM (SELECT DISTINCT contenthash, filesize
-            FROM {files} f
-            JOIN {context} ctx ON f.contextid = ctx.id
-            WHERE ".$DB->sql_concat('ctx.path', "'/'")." NOT LIKE ?
-                AND f.contenthash IN (SELECT DISTINCT f.contenthash
-                                      FROM {files} f
-                                      JOIN {context} ctx ON f.contextid = ctx.id
-                                     WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
-                                       AND f.filename != '.')) b";
-            $size = $DB->get_field_sql($sizesql, array($contextcheck, $contextcheck));
+            $size = report_coursesize_calculate_filesize_shared_courses($contextcheck);
 
             if (!empty($size)) {
-                //$return = number_format(ceil($size / 1048576)) . "MB";
-                $sum_size += $size;
+                $sumsize += $size;
             }
-
         }
 
-        $return = number_format(ceil($sum_size / 1048576));
+        $return = number_format(ceil($sumsize / 1048576));
 
         return ['size' => $return];
     }
@@ -72,6 +63,118 @@ class report_coursesize_external extends external_api {
         return new external_single_structure([
             'size' => new external_value(PARAM_FLOAT, 'Total courses size in MB')
         ]);
+    }
+
+    public static function site_details_parameters() {
+        return new external_function_parameters(array());
+    }
+
+    public static function site_details() {
+        global $DB;
+
+        list($totalusage, $totaldate) = report_coursesize_totalusage(false);
+
+        $coursesizes = array(); // To track a mapping of courseid to filessize.
+        $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
+        $usersizes = array(); // To track a mapping of users to filesize.
+        $systemsize = $systembackupsize = 0;
+        $coursesql = 'SELECT cx.id, c.id as courseid ' .
+            'FROM {course} c ' .
+            ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
+        $courselookup = $DB->get_records_sql($coursesql, array());
+        $cxsizes = report_coursesize_cxsizes();
+
+        foreach ($cxsizes as $cxdata) {
+            $contextlevel = $cxdata->contextlevel;
+            $instanceid = $cxdata->instanceid;
+            $contextsize = $cxdata->filessize;
+            $contextbackupsize = (empty($cxdata->backupsize) ? 0 : $cxdata->backupsize);
+            if ($contextlevel == CONTEXT_USER) {
+                $usersizes[$instanceid] = $contextsize;
+                $userbackupsizes[$instanceid] = $contextbackupsize;
+                continue;
+            }
+            if ($contextlevel == CONTEXT_COURSE) {
+                $coursesizes[$instanceid] = $contextsize;
+                $coursebackupsizes[$instanceid] = $contextbackupsize;
+                continue;
+            }
+            if (($contextlevel == CONTEXT_SYSTEM) || ($contextlevel == CONTEXT_COURSECAT)) {
+                $systemsize = $contextsize;
+                $systembackupsize = $contextbackupsize;
+                continue;
+            }
+            // Not a course, user, system, category, see it it's something that should be listed under a course
+            // Modules & Blocks mostly.
+            $path = explode('/', $cxdata->path);
+            array_shift($path); // Get rid of the leading (empty) array item.
+            array_pop($path); // Trim the contextid of the current context itself.
+
+            $success = false; // Course not yet found.
+            // Look up through the parent contexts of this item until a course is found.
+            while (count($path)) {
+                $contextid = array_pop($path);
+                if (isset($courselookup[$contextid])) {
+                    $success = true; // Course found.
+                    // Record the files for the current context against the course.
+                    $courseid = $courselookup[$contextid]->courseid;
+                    if (!empty($coursesizes[$courseid])) {
+                        $coursesizes[$courseid] += $contextsize;
+                        $coursebackupsizes[$courseid] += $contextbackupsize;
+                    } else {
+                        $coursesizes[$courseid] = $contextsize;
+                        $coursebackupsizes[$courseid] = $contextbackupsize;
+                    }
+                    break;
+                }
+            }
+            if (!$success) {
+                // Didn't find a course
+                // A module or block not under a course?
+                $systemsize += $contextsize;
+                $systembackupsize += $contextbackupsize;
+            }
+        }
+
+        $sql = "SELECT c.id, c.shortname, c.category, ca.name FROM {course} c "
+            ."JOIN {course_categories} ca on c.category = ca.id";
+        $courses = $DB->get_records_sql($sql, array());
+
+        $coursedata = array();
+        foreach ($coursesizes as $courseid => $size) {
+            $course = $courses[$courseid];
+            $coursedata[] = array(
+                'id' => $course->id,
+                'name' => $course->shortname,
+                'category' => $course->name,
+                'total' => number_format(ceil($size / 1048576)),
+                'backup' => $coursebackupsizes[$courseid]
+            );
+        }
+
+        return array(
+            'total_sitedata' => number_format(ceil($totalusage / 1048576)),
+            'total_sitedata_recorded' => $totaldate,
+            'system_and_category' => number_format(ceil($systemsize / 1048576)),
+            'system_and_category_backup' => number_format(ceil($systembackupsize / 1048576)),
+            'courses' => $coursedata
+        );
+    }
+
+    public static function site_details_returns() {
+        return new external_single_structure(array(
+            'total_sitedata' => new external_value(PARAM_FLOAT, "Total sitedata usage in MB"),
+            'total_sitedata_recorded' => new external_value(PARAM_RAW, "Total sitedata usage record date"),
+            'system_and_category' => new external_value(PARAM_FLOAT, "System and category use outside users and courses in MB"),
+            'system_and_category_backup' => new external_value(PARAM_FLOAT, "System and category backup use in MB"),
+            'courses' => new external_multiple_structure(new external_single_structure(array(
+                'id' => new external_value(PARAM_INT, "Course ID"),
+                'name' => new external_value(PARAM_RAW, "Course name"),
+                'category' => new external_value(PARAM_RAW, "Category name"),
+                'total' => new external_value(PARAM_FLOAT, "Total size in MB"),
+                'backup' => new external_value(PARAM_FLOAT, "Backup size in MB")
+            )))
+        ));
     }
 
 }

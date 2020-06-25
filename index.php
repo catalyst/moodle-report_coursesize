@@ -25,6 +25,8 @@
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
+require_once($CFG->dirroot . "/report/coursesize/lib.php");
+
 
 admin_externalpage_setup('reportcoursesize');
 
@@ -45,28 +47,7 @@ if (!defined('REPORT_COURSESIZE_UPDATETOTAL')) {
     define('REPORT_COURSESIZE_UPDATETOTAL', 1 * DAYSECS);
 }
 
-$reportconfig = get_config('report_coursesize');
-if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
-    && ($reportconfig->filessizeupdated > time() - REPORT_COURSESIZE_UPDATETOTAL)) {
-    // Total files usage has been recently calculated, and stored by another process - use that.
-    $totalusage = $reportconfig->filessize;
-    $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
-} else {
-    // Check if the path ends with a "/" otherwise an exception will be thrown
-    $sitedatadir = $CFG->dataroot;
-    if (is_dir($sitedatadir)) {
-        // Only append a "/" if it doesn't already end with one
-        if (substr($sitedatadir, -1) !== '/') {
-            $sitedatadir .= '/';
-        }
-    }
-
-    // Total files usage either hasn't been stored, or is out of date.
-    $totaldate = date("Y-m-d H:i", time());
-    $totalusage = get_directory_size($sitedatadir);
-    set_config('filessize', $totalusage, 'report_coursesize');
-    set_config('filessizeupdated', time(), 'report_coursesize');
-}
+list($totalusage, $totaldate) = report_coursesize_totalusage(false);
 
 $totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
 
@@ -74,23 +55,7 @@ $totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
 // eg old 1.9 course dirs, temp, sessions etc.
 
 // Generate a full list of context sitedata usage stats.
-$subsql = 'SELECT f.contextid, sum(f.filesize) as filessize' .
-          ' FROM {files} f';
-$wherebackup = ' WHERE component like \'backup\' AND referencefileid IS NULL';
-$groupby = ' GROUP BY f.contextid';
-$reverse = 'reverse(cx2.path)';
-$poslast = $DB->sql_position("'/'", $reverse);
-$length = $DB->sql_length('cx2.path');
-$substr = $DB->sql_substr('cx2.path', 1, $length ." - " . $poslast);
-$likestr = $DB->sql_concat($substr, "'%'");
-
-$sizesql = 'SELECT cx.id, cx.contextlevel, cx.instanceid, cx.path, cx.depth,
-            size.filessize, backupsize.filessize as backupsize' .
-           ' FROM {context} cx ' .
-           ' INNER JOIN ( ' . $subsql . $groupby . ' ) size on cx.id=size.contextid' .
-           ' LEFT JOIN ( ' . $subsql . $wherebackup . $groupby . ' ) backupsize on cx.id=backupsize.contextid' .
-           ' ORDER by cx.depth ASC, cx.path ASC';
-$cxsizes = $DB->get_recordset_sql($sizesql);
+$cxsizes = report_coursesize_cxsizes();
 $coursesizes = array(); // To track a mapping of courseid to filessize.
 $coursebackupsizes = array(); // To track a mapping of courseid to backup filessize.
 $usersizes = array(); // To track a mapping of users to filesize.
