@@ -17,7 +17,6 @@
 /**
  * WS functions
  *
- * Class report_coursesize_external class for ws functions
  * @package    report_coursesize
  * @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -29,6 +28,12 @@ require_once($CFG->libdir . "/externallib.php");
 require_once($CFG->libdir . "/adminlib.php");
 require_once($CFG->dirroot . "/report/coursesize/lib.php");
 
+/**
+ * Class report_coursesize_external class for ws functions
+ *
+ * @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class report_coursesize_external extends external_api {
 
     /**
