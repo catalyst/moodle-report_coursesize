@@ -24,6 +24,7 @@
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->dirroot . "/report/coursesize/lib.php");
 
 $courseid = required_param('id', PARAM_INT);
 

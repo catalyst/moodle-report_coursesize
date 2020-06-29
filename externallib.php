@@ -170,7 +170,7 @@ class report_coursesize_external extends external_api {
                 'name' => $course->shortname,
                 'category' => $course->name,
                 'total' => number_format(ceil($size / 1048576)),
-                'backup' => $cbackupsizes[$courseid]
+                'backup' => number_format(ceil($cbackupsizes[$courseid] / 1048576))
             );
         }
 
