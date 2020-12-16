@@ -50,10 +50,11 @@ $coursetable->head = array(get_string('plugin'),
     get_string('size'));
 $coursetable->data = array();
 
+$sizemb = ' ' . get_string('sizemb');
 foreach ($cxsizes as $cxdata) {
     $row = array();
     $row[] = $cxdata->component;
-    $row[] = number_format(ceil($cxdata->filesize / 1048576)) . "MB";
+    $row[] = number_format(ceil($cxdata->filesize / 1048576)) . $sizemb;
 
     $coursetable->data[] = $row;
 }
@@ -71,7 +72,7 @@ $sizesql = "SELECT SUM(filesize) FROM (SELECT DISTINCT contenthash, filesize
                                        AND f.filename != '.')) b";
 $size = $DB->get_field_sql($sizesql, array($contextcheck, $contextcheck));
 if (!empty($size)) {
-    $size = number_format(ceil($size / 1048576)) . "MB";
+    $size = number_format(ceil($size / 1048576)) . $sizemb;
 }
 
 

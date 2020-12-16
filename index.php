@@ -68,7 +68,8 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
     set_config('filessizeupdated', time(), 'report_coursesize');
 }
 
-$totalusagereadable = number_format(ceil($totalusage / 1048576)) . " MB";
+$sizemb = ' ' . get_string('sizemb');
+$totalusagereadable = number_format(ceil($totalusage / 1048576)) . $sizemb;
 
 // TODO: display the sizes of directories (other than filedir) in dataroot
 // eg old 1.9 course dirs, temp, sessions etc.
@@ -202,11 +203,14 @@ foreach ($coursesizes as $courseid => $size) {
     $totalsize = $totalsize + $size;
     $totalbackupsize  = $totalbackupsize + $backupsize;
     $course = $courses[$courseid];
+    $coursecontext = context_course::instance($course->id);
+    $course->shortname = format_string($course->shortname, true, ['context' => $coursecontext]);
+    $course->name = format_string($course->name, true, ['context' => $coursecontext]);
     $row = array();
     $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
     $row[] = '<a href="'.$CFG->wwwroot.'/course/index.php?categoryid='.$course->category.'">' . $course->name . '</a>';
 
-    $readablesize = number_format(ceil($size / 1048576)) . "MB";
+    $readablesize = number_format(ceil($size / 1048576)) . $sizemb;
     $a = new stdClass;
     $a->bytes = $size;
     $a->shortname = $course->shortname;
@@ -214,12 +218,12 @@ foreach ($coursesizes as $courseid => $size) {
     $bytesused = get_string('coursebytes', 'report_coursesize', $a);
     $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
     $summarylink = new moodle_url('/report/coursesize/course.php', array('id' => $course->id));
-    $summary = html_writer::link($summarylink, get_string('coursesummary', 'report_coursesize'));
+    $summary = html_writer::link($summarylink, ' '.get_string('coursesummary', 'report_coursesize'));
     $row[] = "<span id=\"coursesize_".$course->shortname."\" title=\"$bytesused\">$readablesize</span>".$summary;
-    $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . " MB</span>";
+    $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($backupsize / 1048576)) . "$sizemb</span>";
     $coursetable->data[] = $row;
     $downloaddata[] = array($course->shortname, $course->name, str_replace(',', '', $readablesize),
-                            str_replace(',', '', number_format(ceil($backupsize / 1048576)) . "MB"));
+                            str_replace(',', '', number_format(ceil($backupsize / 1048576)) . "$sizemb"));
     unset($courses[$courseid]);
 }
 
@@ -229,13 +233,14 @@ if (REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
     $a->bytes = 0;
     $a->backupbytes = 0;
     foreach ($courses as $cid => $course) {
+        $course->shortname = format_string($course->shortname, true, context_course::instance($course->id));
         $a->shortname = $course->shortname;
         $bytesused = get_string('coursebytes', 'report_coursesize', $a);
         $bytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
         $row = array();
         $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
-        $row[] = "<span title=\"$bytesused\">0 MB</span>";
-        $row[] = "<span title=\"$bytesused\">0 MB</span>";
+        $row[] = "<span title=\"$bytesused\">0$sizemb</span>";
+        $row[] = "<span title=\"$bytesused\">0$sizemb</span>";
         $coursetable->data[] = $row;
     }
 }
@@ -245,11 +250,11 @@ $downloaddata[] = array();
 $row = array();
 $row[] = get_string('total');
 $row[] = '';
-$row[] = number_format(ceil($totalsize / 1048576)) . "MB";
-$row[] = number_format(ceil($totalbackupsize / 1048576)) . "MB";
+$row[] = number_format(ceil($totalsize / 1048576)) . $sizemb;
+$row[] = number_format(ceil($totalbackupsize / 1048576)) . $sizemb;
 $coursetable->data[] = $row;
 $downloaddata[] = array(get_string('total'), '', str_replace(',', '', number_format(ceil($totalsize / 1048576))) .
-                        "MB", str_replace(',', '', number_format(ceil($totalbackupsize / 1048576)) . "MB"));
+                        $sizemb, str_replace(',', '', number_format(ceil($totalbackupsize / 1048576)) . $sizemb));
 unset($courses);
 
 
@@ -265,7 +270,7 @@ if (!empty($usersizes)) {
         $user = $DB->get_record('user', array('id' => $userid));
         $row = array();
         $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userid.'">' . fullname($user) . '</a>';
-        $row[] = number_format(ceil($size / 1048576)) . "MB";
+        $row[] = number_format(ceil($size / 1048576)) . $sizemb;
         $usertable->data[] = $row;
         if ($usercount >= REPORT_COURSESIZE_NUMBEROFUSERS) {
             break;
@@ -273,8 +278,8 @@ if (!empty($usersizes)) {
     }
     unset($users);
 }
-$systemsizereadable = number_format(ceil($systemsize / 1048576)) . "MB";
-$systembackupreadable = number_format(ceil($systembackupsize / 1048576)) . "MB";
+$systemsizereadable = number_format(ceil($systemsize / 1048576)) . $sizemb;
+$systembackupreadable = number_format(ceil($systembackupsize / 1048576)) . $sizemb;
 
 
 // Add in Course Cat including dropdown to filter.
@@ -283,7 +288,7 @@ $url = '';
 $catlookup = $DB->get_records_sql('select id,name from {course_categories}');
 $options = array('0' => 'All Courses' );
 foreach ($catlookup as $cat) {
-    $options[$cat->id] = $cat->name;
+    $options[$cat->id] = format_string($cat->name, true, context_system::instance());
 }
 
 // Add in download option. Exports CSV.
