@@ -52,10 +52,10 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)
     $totalusage = $reportconfig->filessize;
     $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
 } else {
-    // Check if the path ends with a "/" otherwise an exception will be thrown
+    // Check if the path ends with a "/" otherwise an exception will be thrown.
     $sitedatadir = $CFG->dataroot;
     if (is_dir($sitedatadir)) {
-        // Only append a "/" if it doesn't already end with one
+        // Only append a "/" if it doesn't already end with one.
         if (substr($sitedatadir, -1) !== '/') {
             $sitedatadir .= '/';
         }
