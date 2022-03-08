@@ -34,26 +34,26 @@ $course = $DB->get_record('course', array('id' => $courseid));
 $context = context_course::instance($course->id);
 $contextcheck = $context->path . '/%';
 
-$sizesql = "SELECT a.component, SUM(a.filesize) as filesize
-              FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize
+$sizesql = "SELECT a.component, a.filearea, SUM(a.filesize) as filesize
+              FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize, f.filearea
                     FROM {files} f
                     JOIN {context} ctx ON f.contextid = ctx.id
                     WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
                        AND f.filename != '.') a
-             GROUP BY a.component";
+             GROUP BY a.component, a.filearea";
 
 $cxsizes = $DB->get_recordset_sql($sizesql, array($contextcheck));
 
 $coursetable = new html_table();
-$coursetable->align = array('right', 'right');
-$coursetable->head = array(get_string('plugin'),
-    get_string('size'));
+$coursetable->align = array('right', 'right', 'right');
+$coursetable->head = array(get_string('plugin'), get_string('filearea', 'report_coursesize'), get_string('size'));
 $coursetable->data = array();
 
 $sizemb = ' ' . get_string('sizemb');
 foreach ($cxsizes as $cxdata) {
     $row = array();
     $row[] = $cxdata->component;
+    $row[] = $cxdata->filearea;
     $row[] = number_format(ceil($cxdata->filesize / 1000000)) . $sizemb;
 
     $coursetable->data[] = $row;
