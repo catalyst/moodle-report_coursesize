@@ -46,33 +46,35 @@ class report_async extends \core\task\scheduled_task {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/report/coursesize/locallib.php');
 
-        mtrace("Generating report_coursesize cache...");
-        set_time_limit(0);
+        if (get_config('report_coursesize', 'calcmethod') == 'cron') {
 
-        // First we delete the old data, then we re-populate it, wrap in a transaction to help keep it together.
-        $transaction = $DB->start_delegated_transaction();
+            mtrace("Generating report_coursesize cache...");
+            set_time_limit(0);
 
-        // Clean up cache table.
-        $DB->delete_records('report_coursesize');
+            // First we delete the old data, then we re-populate it, wrap in a transaction to help keep it together.
+            $transaction = $DB->start_delegated_transaction();
 
-        // Generate report_coursesize table.
-        $basesql = local_coursesize_filesize_sql();
-        $sql = "INSERT INTO {report_coursesize} (course, filesize) $basesql ";
-        $DB->execute($sql);
+            // Clean up cache table.
+            $DB->delete_records('report_coursesize');
 
-        // Now calculate size of backups.
-        $basesql = local_coursesize_backupsize_sql();
+            // Generate report_coursesize table.
+            $basesql = local_coursesize_filesize_sql();
+            $sql = "INSERT INTO {report_coursesize} (course, filesize) $basesql ";
+            $DB->execute($sql);
 
-        $sql = "UPDATE {report_coursesize} rc
-                   SET backupsize = (SELECT bf.filesize FROM ($basesql) bf WHERE bf.course = rc.course)";
-        $DB->execute($sql);
+            // Now calculate size of backups.
+            $basesql = local_coursesize_backupsize_sql();
 
-        $transaction->allow_commit();
+            $sql = "UPDATE {report_coursesize} rc
+                    SET backupsize = (SELECT bf.filesize FROM ($basesql) bf WHERE bf.course = rc.course)";
+            $DB->execute($sql);
 
-        set_config('coursesizeupdated', time(), 'report_coursesize');
+            $transaction->allow_commit();
 
-        mtrace("report_coursesize cache updated.");
+            set_config('coursesizeupdated', time(), 'report_coursesize');
 
+            mtrace("report_coursesize cache updated.");
+        }
         // Check if the path ends with a "/" otherwise an exception will be thrown.
         $sitedatadir = $CFG->dataroot;
         if (is_dir($sitedatadir)) {
