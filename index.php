@@ -51,8 +51,7 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated))
     $totalusage = 0;
 }
 
-$sizemb = ' ' . get_string('sizemb');
-$totalusagereadable = number_format(ceil($totalusage / 1000000)) . $sizemb;
+$totalusagereadable = display_size($totalusage);
 
 $usersizes = array(); // To track a mapping of users to filesize.
 $systemsize = $systembackupsize = 0;
@@ -140,7 +139,7 @@ foreach ($courses as $courseid => $course) {
     $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
     $row[] = '<a href="'.$CFG->wwwroot.'/course/index.php?categoryid='.$course->category.'">' . $course->name . '</a>';
 
-    $readablesize = number_format(ceil($course->filesize / 1000000)) . $sizemb;
+    $readablesize = display_size($course->filesize);
     $a = new stdClass;
     $a->bytes = $course->filesize;
     $a->shortname = $course->shortname;
@@ -150,10 +149,10 @@ foreach ($courses as $courseid => $course) {
     $summarylink = new moodle_url('/report/coursesize/course.php', array('id' => $course->id));
     $summary = html_writer::link($summarylink, ' '.get_string('coursesummary', 'report_coursesize'));
     $row[] = "<span id=\"coursesize_".$course->shortname."\" title=\"$bytesused\">$readablesize</span>".$summary;
-    $row[] = "<span title=\"$backupbytesused\">" . number_format(ceil($course->backupsize / 1000000)) . "$sizemb</span>";
+    $row[] = "<span title=\"$backupbytesused\">" . display_size($course->backupsize) ."</span>";
     $coursetable->data[] = $row;
     $downloaddata[] = array($course->shortname, $course->name, str_replace(',', '', $readablesize),
-                            str_replace(',', '', number_format(ceil($course->backupsize / 1000000)) . "$sizemb"));
+                            str_replace(',', '', display_size($course->backupsize)));
 }
 
 // Now add the courses that had no sitedata into the table.
@@ -168,8 +167,8 @@ if (REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
         $bytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
         $row = array();
         $row[] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$course->id.'">' . $course->shortname . '</a>';
-        $row[] = "<span title=\"$bytesused\">0$sizemb</span>";
-        $row[] = "<span title=\"$bytesused\">0$sizemb</span>";
+        $row[] = "<span title=\"$bytesused\">0</span>";
+        $row[] = "<span title=\"$bytesused\">0</span>";
         $coursetable->data[] = $row;
     }
 }
@@ -179,13 +178,11 @@ $downloaddata[] = array();
 $row = array();
 $row[] = get_string('total');
 $row[] = '';
-$row[] = number_format(ceil($totalsize / 1000000)) . $sizemb;
-$row[] = number_format(ceil($totalbackupsize / 1000000)) . $sizemb;
+$row[] = display_size($totalsize);
+$row[] = display_size($totalbackupsize);
 $coursetable->data[] = $row;
-$downloaddata[] = array(get_string('total'), '', str_replace(',', '', number_format(ceil($totalsize / 1000000))) .
-                        $sizemb, str_replace(',', '', number_format(ceil($totalbackupsize / 1000000)) . $sizemb));
+$downloaddata[] = [get_string('total'), '', display_size($totalsize), display_size($totalbackupsize)];
 unset($courses);
-
 
 if (!empty($usersizes)) {
     arsort($usersizes);
@@ -199,7 +196,7 @@ if (!empty($usersizes)) {
         $user = $DB->get_record('user', array('id' => $userid));
         $row = array();
         $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userid.'">' . fullname($user) . '</a>';
-        $row[] = number_format(ceil($size / 1000000)) . $sizemb;
+        $row[] = display_size($size);
         $usertable->data[] = $row;
         if ($usercount >= REPORT_COURSESIZE_NUMBEROFUSERS) {
             break;
@@ -207,8 +204,8 @@ if (!empty($usersizes)) {
     }
     unset($users);
 }
-$systemsizereadable = number_format(ceil($systemsize / 1000000)) . $sizemb;
-$systembackupreadable = number_format(ceil($systembackupsize / 1000000)) . $sizemb;
+$systemsizereadable = display_size($systemsize);
+$systembackupreadable = display_size($systembackupsize);
 
 
 // Add in Course Cat including dropdown to filter.

@@ -31,5 +31,5 @@ Feature: Course size report calculates correct information
     When I log in as "admin"
     And I navigate to "Reports > Course size" in site administration
     Then I should see "File usage report"
-    And I should see "1 MB" in the "#coursesize_C1" "css_element"
+    And I should see "34.3" in the "#coursesize_C1" "css_element"
     And I should not see "C2"
