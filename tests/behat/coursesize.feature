@@ -14,7 +14,7 @@ Feature: Course size report calculates correct information
       | teacher1 | C1 | editingteacher |
       | teacher1 | C2 | editingteacher |
     And I log in as "teacher1"
-    And I follow "Course 1"
+    And I am on "Course 1" course homepage
     And I turn editing mode on
     And I add a "File" to section "1"
     And I set the following fields to these values:
@@ -28,5 +28,5 @@ Feature: Course size report calculates correct information
     When I log in as "admin"
     And I navigate to "Reports > Course size" in site administration
     Then I should see "File usage report"
-    And I should see "1MB" in the "#coursesize_C1" "css_element"
+    And I should see "1 MB" in the "#coursesize_C1" "css_element"
     And I should not see "C2"
