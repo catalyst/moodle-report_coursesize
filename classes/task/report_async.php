@@ -44,9 +44,9 @@ class report_async extends \core\task\scheduled_task {
      */
     public function execute() {
         global $DB, $CFG;
+        require_once($CFG->dirroot . '/report/coursesize/locallib.php');
 
         mtrace("Generating report_coursesize cache...");
-
         set_time_limit(0);
 
         // First we delete the old data, then we re-populate it, wrap in a transaction to help keep it together.
@@ -55,36 +55,13 @@ class report_async extends \core\task\scheduled_task {
         // Clean up cache table.
         $DB->delete_records('report_coursesize');
 
-        $sqlunion = "UNION ALL
-                        SELECT c.id, f.filesize
-                        FROM {block_instances} bi
-                        JOIN {context} cx1 ON cx1.contextlevel = ".CONTEXT_BLOCK. " AND cx1.instanceid = bi.id
-                        JOIN {context} cx2 ON cx2.contextlevel = ". CONTEXT_COURSE. " AND cx2.id = bi.parentcontextid
-                        JOIN {course} c ON c.id = cx2.instanceid
-                        JOIN {files} f ON f.contextid = cx1.id
-                    UNION ALL
-                        SELECT c.id, f.filesize
-                        FROM {course_modules} cm
-                        JOIN {context} cx ON cx.contextlevel = ".CONTEXT_MODULE." AND cx.instanceid = cm.id
-                        JOIN {course} c ON c.id = cm.course
-                        JOIN {files} f ON f.contextid = cx.id";
         // Generate report_coursesize table.
-        $basesql = "SELECT id AS course, SUM(filesize) AS filesize
-                      FROM (SELECT c.id, f.filesize
-                              FROM {course} c
-                              JOIN {context} cx ON cx.contextlevel = ".CONTEXT_COURSE." AND cx.instanceid = c.id
-                              JOIN {files} f ON f.contextid = cx.id {$sqlunion}) x
-                    GROUP BY id";
+        $basesql = local_coursesize_filesize_sql();
         $sql = "INSERT INTO {report_coursesize} (course, filesize) $basesql ";
         $DB->execute($sql);
 
         // Now calculate size of backups.
-        $basesql = "SELECT id AS course, SUM(filesize) AS filesize
-                      FROM (SELECT c.id, f.filesize
-                              FROM {course} c
-                              JOIN {context} cx ON cx.contextlevel = ".CONTEXT_COURSE." AND cx.instanceid = c.id
-                              JOIN {files} f ON f.contextid = cx.id AND f.component = 'backup') x
-                    GROUP BY id";
+        $basesql = local_coursesize_backupsize_sql();
 
         $sql = "UPDATE {report_coursesize} rc
                    SET backupsize = (SELECT bf.filesize FROM ($basesql) bf WHERE bf.course = rc.course)";

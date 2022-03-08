@@ -46,7 +46,8 @@ function xmldb_report_coursesize_upgrade($oldversion) {
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         } else {
-            // Throw warning - some old unsupported branches use a similar table that is not compatible with this version these must be cleaned up manually.
+            // Throw warning - some old unsupported branches use a similar table that is not compatible with this version,
+            // these must be cleaned up manually.
             print_error("Cannot upgrade this old coursereport plugin - you should check/delete the old table before upgrading to this release.");
         }
 

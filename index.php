@@ -23,12 +23,13 @@
  */
 
 require_once('../../config.php');
+require_once($CFG->dirroot.'/report/coursesize/locallib.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
 
 admin_externalpage_setup('reportcoursesize');
 
-$coursecategory = optional_param('category', '', PARAM_INT);
+$coursecategory = optional_param('category', 0, PARAM_INT);
 $download = optional_param('download', '', PARAM_INT);
 
 // If we should show or hide empty courses.
@@ -80,12 +81,29 @@ $coursesql .= $extracoursesql;
 $params = array_merge($params, $courseparams);
 $courselookup = $DB->get_records_sql($coursesql, $params);
 
-$sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize, rc.backupsize
+$live = false;
+$backupsizes = [];
+if (isset($reportconfig->calcmethod) && ($reportconfig->calcmethod) == 'live') {
+    $live = true;
+}
+if ($live) {
+    $filesql = local_coursesize_filesize_sql();
+    $sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize
           FROM {course} c
-          JOIN {report_coursesize} rc on rc.course = c.id
-          JOIN {course_categories} ca on c.category = ca.id
-          $extracoursesql
-      ORDER BY rc.filesize DESC";
+          JOIN ($filesql) rc on rc.course = c.id ";
+
+    // Generate table of backup filesizes too.
+    $backupsql = local_coursesize_backupsize_sql();
+    $backupsizes = $DB->get_records_sql($backupsql);
+} else {
+    $sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize, rc.backupsize
+          FROM {course} c
+          JOIN {report_coursesize} rc on rc.course = c.id ";
+}
+
+$sql .= "JOIN {course_categories} ca on c.category = ca.id
+         $extracoursesql
+     ORDER BY rc.filesize DESC";
 $courses = $DB->get_records_sql($sql, $courseparams);
 
 $coursetable = new html_table();
@@ -106,7 +124,13 @@ $downloaddata[] = array(get_string('course'),
 
 $coursesizes = $DB->get_records('report_coursesize');
 foreach ($courses as $courseid => $course) {
-
+    if ($live) {
+        if (isset($backupsizes[$course->id])) {
+            $course->backupsize = $backupsizes[$course->id]->filesize;
+        } else {
+            $course->backupsize = 0;
+        }
+    }
     $totalsize = $totalsize + $course->filesize;
     $totalbackupsize  = $totalbackupsize + $course->backupsize;
     $coursecontext = context_course::instance($course->id);
@@ -212,22 +236,25 @@ if ($download == 1) {
 
 print $OUTPUT->header();
 if (empty($coursecat)) {
+    $updatestring = !empty($reportconfig->filessizeupdated) ? userdate($reportconfig->filessizeupdated) : get_string('never');
     print $OUTPUT->heading(get_string("sitefilesusage", 'report_coursesize'));
     print '<strong>' . get_string("totalsitedata", 'report_coursesize', $totalusagereadable) . '</strong> ';
-    print get_string('lastupdate', 'report_coursesize', userdate($reportconfig->filessizeupdated)) . "<br/><br/>\n";
+    print get_string('lastupdate', 'report_coursesize', $updatestring) . "<br/><br/>\n";
     print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<br/>";
     print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
     if (!empty($CFG->filessizelimit)) {
         print get_string("sizepermitted", 'report_coursesize', number_format($CFG->filessizelimit)) . "<br/>\n";
     }
 }
-
-if (empty($reportconfig->coursesizeupdated)) {
-    $lastupdate = get_string('lastupdatenever', 'report_coursesize');
-} else {
-    $lastupdate = get_string('lastupdate', 'report_coursesize', userdate($reportconfig->coursesizeupdated));
+$lastupdate = '';
+if (!$live) {
+    if (empty($reportconfig->coursesizeupdated)) {
+        $lastupdate = get_string('lastupdatenever', 'report_coursesize');
+    } else {
+        $lastupdate = get_string('lastupdate', 'report_coursesize', userdate($reportconfig->coursesizeupdated));
+    }
+    $lastupdate = html_writer::span($lastupdate, 'lastupdate');
 }
-$lastupdate = html_writer::span($lastupdate, 'lastupdate');
 $heading = get_string('coursesize', 'report_coursesize');
 if (!empty($coursecat)) {
     $heading .= " - ".$coursecat->name;
@@ -241,7 +268,7 @@ if (!REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
 }
 print $OUTPUT->box($desc);
 
-$filter = $OUTPUT->single_select($url, 'category', $options);
+$filter = $OUTPUT->single_select($url, 'category', $options, $coursecategory, []);
 $filter .= $OUTPUT->single_button(new moodle_url('index.php', array('download' => 1, 'category' => $coursecategory )),
                                   get_string('exportcsv', 'report_coursesize'), 'post', ['class' => 'coursesizedownload']);
 

@@ -13,6 +13,9 @@ Feature: Course size report calculates correct information
       | user | course | role |
       | teacher1 | C1 | editingteacher |
       | teacher1 | C2 | editingteacher |
+    And the following config values are set as admin:
+      | config     | value | plugin            |
+      | calcmethod | live  | report_coursesize |
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I turn editing mode on

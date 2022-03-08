@@ -28,5 +28,13 @@ if ($hassiteconfig) {
 
     $ADMIN->add('reports', new admin_externalpage('reportcoursesize', get_string('pluginname', 'report_coursesize'),
                                               "$CFG->wwwroot/report/coursesize/index.php", 'report/coursesize:view'));
-    $settings = null;
+
+    $settings = new admin_settingpage('report_coursesize_settings', new lang_string('pluginname', 'report_coursesize'));
+    if ($ADMIN->fulltree) {
+        $settings->add(new admin_setting_configselect('report_coursesize/calcmethod',
+            new lang_string('calcmethod', 'report_coursesize'),
+            new lang_string('calcmethodhelp', 'report_coursesize'),
+            'cron', array('cron' => new lang_string('calcmethodcron', 'report_coursesize'),
+                'live' => new lang_string('calcmethodlive', 'report_coursesize'))));
+    }
 }
