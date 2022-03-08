@@ -53,7 +53,8 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated))
 
 $totalusagereadable = display_size($totalusage);
 
-$usersizes = array(); // To track a mapping of users to filesize.
+$usersizes = $DB->get_records_sql(report_coursesize_usersize_sql(), [], 0, REPORT_COURSESIZE_NUMBEROFUSERS);
+
 $systemsize = $systembackupsize = 0;
 
 $coursesql = 'SELECT cx.id, c.id as courseid ' .
@@ -86,13 +87,13 @@ if (isset($reportconfig->calcmethod) && ($reportconfig->calcmethod) == 'live') {
     $live = true;
 }
 if ($live) {
-    $filesql = local_coursesize_filesize_sql();
+    $filesql = report_coursesize_filesize_sql();
     $sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize
           FROM {course} c
           JOIN ($filesql) rc on rc.course = c.id ";
 
     // Generate table of backup filesizes too.
-    $backupsql = local_coursesize_backupsize_sql();
+    $backupsql = report_coursesize_backupsize_sql();
     $backupsizes = $DB->get_records_sql($backupsql);
 } else {
     $sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize, rc.backupsize
@@ -196,7 +197,7 @@ if (!empty($usersizes)) {
         $user = $DB->get_record('user', array('id' => $userid));
         $row = array();
         $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$userid.'">' . fullname($user) . '</a>';
-        $row[] = display_size($size);
+        $row[] = display_size($size->totalsize);
         $usertable->data[] = $row;
         if ($usercount >= REPORT_COURSESIZE_NUMBEROFUSERS) {
             break;

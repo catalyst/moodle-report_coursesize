@@ -26,7 +26,7 @@
  * Get sql snippet for course filesizes.
  * @return string
  */
-function local_coursesize_filesize_sql() {
+function report_coursesize_filesize_sql() {
     $sqlunion = "UNION ALL
                     SELECT c.id, f.filesize
                     FROM {block_instances} bi
@@ -53,11 +53,23 @@ function local_coursesize_filesize_sql() {
  * Get sql snippet for backup filesizes.
  * @return string
  */
-function local_coursesize_backupsize_sql() {
+function report_coursesize_backupsize_sql() {
     return "SELECT id AS course, SUM(filesize) AS filesize
               FROM (SELECT c.id, f.filesize
                       FROM {course} c
                       JOIN {context} cx ON cx.contextlevel = ".CONTEXT_COURSE." AND cx.instanceid = c.id
                       JOIN {files} f ON f.contextid = cx.id AND f.component = 'backup') x
             GROUP BY id";
+}
+
+/**
+ * Helper function to return user file sizes.
+ *
+ * @return void
+ */
+function report_coursesize_usersize_sql() {
+    return "SELECT userid, sum(filesize) totalsize
+            FROM {files}
+            WHERE userid is not null
+        GROUP BY userid ORDER BY totalsize DESC";
 }

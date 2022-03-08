@@ -58,12 +58,12 @@ class report_async extends \core\task\scheduled_task {
             $DB->delete_records('report_coursesize');
 
             // Generate report_coursesize table.
-            $basesql = local_coursesize_filesize_sql();
+            $basesql = report_coursesize_filesize_sql();
             $sql = "INSERT INTO {report_coursesize} (course, filesize) $basesql ";
             $DB->execute($sql);
 
             // Now calculate size of backups.
-            $basesql = local_coursesize_backupsize_sql();
+            $basesql = report_coursesize_backupsize_sql();
 
             $sql = "UPDATE {report_coursesize} rc
                     SET backupsize = (SELECT bf.filesize FROM ($basesql) bf WHERE bf.course = rc.course)";
