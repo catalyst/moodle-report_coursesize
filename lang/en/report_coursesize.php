@@ -51,3 +51,4 @@ $string['calcmethodcron'] = 'Scheduled task';
 $string['calcmethodlive'] = 'On page load';
 $string['calcmethodhelp'] = 'If calculated by scheduled task, the report will update at the scheduled time and cache the results for later viewing. This is recommended over instant calculations because this can be an intensive/slow query to run.';
 $string['filearea'] = 'File area';
+$string['allcourses'] = 'All courses';

@@ -213,7 +213,7 @@ $systembackupreadable = display_size($systembackupsize);
 
 $url = '';
 $catlookup = $DB->get_records_sql('select id,name from {course_categories}');
-$options = array('0' => 'All Courses' );
+$options = ['0' => get_string('allcourses', 'report_coursesize')];
 foreach ($catlookup as $cat) {
     $options[$cat->id] = format_string($cat->name, true, context_system::instance());
 }
