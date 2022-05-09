@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information
+ * Plugin cache definitions.
  *
  * @package    report_coursesize
- * @copyright  2014 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @author     Kateryna Degtyariova <katerynadegtyariova@catalyst-au.net>
+ * @copyright  2022 Catalyst IT {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2021030808;
-$plugin->requires = 2018120300; // Requires 3.6.
-$plugin->component = 'report_coursesize';
-$plugin->release = '4.1';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->supported = [39, 400];
+$definitions = array(
+    'topuserdata' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+    ),
+);

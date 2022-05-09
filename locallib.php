@@ -73,3 +73,30 @@ function report_coursesize_usersize_sql() {
             WHERE userid is not null
         GROUP BY userid ORDER BY totalsize DESC";
 }
+
+/**
+ * Helper function to return top users who have most data.
+ * It also does caching when necessary.
+ *
+ * @return array with the user data from DB or cache
+ */
+function report_coursesize_get_usersizes() {
+    global $DB;
+    $usercache = \cache::make('report_coursesize', 'topuserdata');
+    $data = $usercache->get('usersizes');
+
+    if ($data && (time() < $data->expiry)) { // Valid cache data.
+        $usersizes = $data->usersizes;
+    } else {
+        $usersizes = $DB->get_records_sql(report_coursesize_usersize_sql(), [], 0, REPORT_COURSESIZE_NUMBEROFUSERS);
+
+        if (!empty($usersizes)) {
+            $data = new \stdClass();
+            // Set expiry period 24 hours.
+            $data->expiry = time() + 24 * 60 * 60;
+            $data->usersizes = $usersizes;
+            $usercache->set('usersizes', $data);
+        }
+    }
+    return $usersizes;
+}

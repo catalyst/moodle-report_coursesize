@@ -52,9 +52,6 @@ if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated))
 }
 
 $totalusagereadable = display_size($totalusage);
-
-$usersizes = $DB->get_records_sql(report_coursesize_usersize_sql(), [], 0, REPORT_COURSESIZE_NUMBEROFUSERS);
-
 $systemsize = $systembackupsize = 0;
 
 $coursesql = 'SELECT cx.id, c.id as courseid ' .
@@ -185,8 +182,8 @@ $coursetable->data[] = $row;
 $downloaddata[] = [get_string('total'), '', display_size($totalsize), display_size($totalbackupsize)];
 unset($courses);
 
+$usersizes = report_coursesize_get_usersizes();
 if (!empty($usersizes)) {
-    arsort($usersizes);
     $usertable = new html_table();
     $usertable->align = array('right', 'right');
     $usertable->head = array(get_string('user'), get_string('diskusage', 'report_coursesize'));
