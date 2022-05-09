@@ -71,6 +71,8 @@ class report_async extends \core\task\scheduled_task {
 
             $transaction->allow_commit();
 
+            // Ignore the result now. The call will only cache the data internally.
+            report_coursesize_get_usersizes();
             set_config('coursesizeupdated', time(), 'report_coursesize');
 
             mtrace("report_coursesize cache updated.");
