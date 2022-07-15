@@ -1,0 +1,9 @@
+{
+    "name": "catalyst-report/coursesize",
+    "description": "This plugin provides approximate disk usage by Moodle courses.",
+    "type": "moodle-report",
+    "require": {
+        "composer/installers": "^2.1"
+    },
+    "license": "http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later"
+}
