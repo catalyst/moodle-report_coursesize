@@ -55,8 +55,10 @@ foreach ($tabdata as $tabname => $param) {
         get_string($tabname, 'report_coursesize', $param));
 }
 
-print $OUTPUT->header();
-echo $OUTPUT->tabtree($tabs, $viewtab);
+if (empty($download)) {
+    print $OUTPUT->header();
+    echo $OUTPUT->tabtree($tabs, $viewtab);
+}
 
 if ($viewtab == 'userstopnum') {
     $usersizes = report_coursesize_get_usersizes();
@@ -253,6 +255,7 @@ if ($viewtab == 'userstopnum') {
             $csvexport->add_data($data);
         }
         $csvexport->download_file();
+        exit;
     }
 
     if (empty($coursecat)) {
