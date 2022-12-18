@@ -29,4 +29,4 @@ $plugin->requires = 2018120300; // Requires 3.6.
 $plugin->component = 'report_coursesize';
 $plugin->release = '4.2';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->supported = [39, 400];
+$plugin->supported = [39, 401];
