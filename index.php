@@ -238,7 +238,8 @@ if ($viewtab == 'userstopnum') {
     $catlookup = $DB->get_records_sql('select id,name from {course_categories}');
     $options = ['0' => get_string('allcourses', 'report_coursesize')];
     foreach ($catlookup as $cat) {
-        $options[$cat->id] = format_string($cat->name, true, context_system::instance());
+        $context = context_system::instance();
+        $options[$cat->id] = format_string($cat->name, true, ['context' => $context]);
     }
 
     // Add in download option. Exports CSV.
