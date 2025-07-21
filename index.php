@@ -183,7 +183,7 @@ if ($viewtab == 'userstopnum') {
         $row[] = '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $course->id . '">' . $course->shortname . '</a>';
         $row[] = '<a href="' . $CFG->wwwroot . '/course/index.php?categoryid=' . $course->category . '">' . $course->name . '</a>';
         if ($download == 1) {
-            $readablesize = display_size($course->filesize, 1, 'B');
+            $readablesize = display_size($course->filesize, 1, 'MB');
         } else {
             $readablesize = display_size($course->filesize);
         }
@@ -199,7 +199,7 @@ if ($viewtab == 'userstopnum') {
         $row[] = "<span title=\"$backupbytesused\">" . display_size($course->backupsize) . "</span>";
         $coursetable->data[] = $row;
         $downloaddata[] = array($course->shortname, $course->name, str_replace(',', '', $readablesize),
-            str_replace(',', '', display_size($course->backupsize, 1, 'B')));
+            str_replace(',', '', display_size($course->backupsize, 1, 'MB')));
     }
 
     // Now add the courses that had no sitedata into the table.
@@ -228,7 +228,7 @@ if ($viewtab == 'userstopnum') {
     $row[] = display_size($totalsize);
     $row[] = display_size($totalbackupsize);
     $coursetable->data[] = $row;
-    $downloaddata[] = [get_string('total'), '', display_size($totalsize, 1, 'B'), display_size($totalbackupsize, 1, 'B')];
+    $downloaddata[] = [get_string('total'), '', display_size($totalsize, 1, 'MB'), display_size($totalbackupsize, 1, 'MB')];
     unset($courses);
 
     $systemsizereadable = display_size($systemsize);
