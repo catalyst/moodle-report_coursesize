@@ -30,7 +30,7 @@ require_once($CFG->libdir.'/csvlib.class.php');
 admin_externalpage_setup('reportcoursesize');
 
 $coursecategory = optional_param('category', 0, PARAM_INT);
-$download = optional_param('download', '', PARAM_INT);
+$download = optional_param('download', '', PARAM_ALPHA);
 $viewtab = optional_param('view', 'coursesize', PARAM_ALPHA);
 $reportconfig = get_config('report_coursesize');
 
@@ -242,14 +242,10 @@ if ($viewtab == 'userstopnum') {
 
     // Add in download option. Exports CSV.
 
-    if ($download == 1) {
-        $downloadfilename = clean_filename("export_csv");
-        $csvexport = new csv_export_writer ('commer');
-        $csvexport->set_filename($downloadfilename);
-        foreach ($downloaddata as $data) {
-            $csvexport->add_data($data);
-        }
-        $csvexport->download_file();
+    if (!empty($download)) {
+        $downloadfilename = clean_filename('coursesize-' . gmdate("Ymd_Hi"));
+        $columns = array_shift($downloaddata);
+        \core\dataformat::download_data($downloadfilename, $download, $columns, $downloaddata);
         exit;
     }
 
@@ -287,10 +283,14 @@ if ($viewtab == 'userstopnum') {
     print $OUTPUT->box($desc);
 
     $filter = $OUTPUT->single_select($url, 'category', $options, $coursecategory, []);
-    $filter .= $OUTPUT->single_button(new moodle_url('index.php', array('download' => 1, 'category' => $coursecategory)),
-        get_string('exportcsv', 'report_coursesize'), 'post', ['class' => 'coursesizedownload']);
+    $downloadbuttons = $OUTPUT->download_dataformat_selector(
+        get_string('downloadas', 'table'),
+        new \moodle_url('/report/coursesize/index.php'),
+        'download',
+        ['category' => $coursecategory],
+    );
 
-    print $OUTPUT->box($filter) . "<br/>";
+    print $OUTPUT->box($filter . $downloadbuttons, 'd-flex justify-content-between flex-wrap align-items-center');
 
     print html_writer::table($coursetable);
 }
