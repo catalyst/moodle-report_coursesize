@@ -33,6 +33,14 @@ function xmldb_report_coursesize_upgrade($oldversion) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2021030802) {
+        // Delete previous table.
+        $table = new xmldb_table('course_filessize');
+
+        // Conditionally launch drop table for course_filessize.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
         // Define table report_coursesize to be created.
         $table = new xmldb_table('report_coursesize');
 
