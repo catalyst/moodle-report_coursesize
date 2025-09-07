@@ -29,7 +29,7 @@ $courseid = required_param('id', PARAM_INT);
 
 admin_externalpage_setup('reportcoursesize');
 
-$course = $DB->get_record('course', array('id' => $courseid));
+$course = $DB->get_record('course', ['id' => $courseid]);
 
 $context = context_course::instance($course->id);
 $contextcheck = $context->path . '/%';
@@ -42,15 +42,15 @@ $sizesql = "SELECT a.component, a.filearea, SUM(a.filesize) as filesize
                        AND f.filename != '.') a
              GROUP BY a.component, a.filearea";
 
-$cxsizes = $DB->get_recordset_sql($sizesql, array($contextcheck));
+$cxsizes = $DB->get_recordset_sql($sizesql, [$contextcheck]);
 
 $coursetable = new html_table();
-$coursetable->align = array('right', 'right', 'right');
-$coursetable->head = array(get_string('plugin'), get_string('filearea', 'report_coursesize'), get_string('size'));
-$coursetable->data = array();
+$coursetable->align = ['right', 'right', 'right'];
+$coursetable->head = [get_string('plugin'), get_string('filearea', 'report_coursesize'), get_string('size')];
+$coursetable->data = [];
 
 foreach ($cxsizes as $cxdata) {
-    $row = array();
+    $row = [];
     $row[] = $cxdata->component;
     $row[] = $cxdata->filearea;
     $row[] = display_size($cxdata->filesize);
@@ -69,7 +69,7 @@ $sizesql = "SELECT SUM(filesize) FROM (SELECT DISTINCT contenthash, filesize
                                       JOIN {context} ctx ON f.contextid = ctx.id
                                      WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
                                        AND f.filename != '.')) b";
-$size = $DB->get_field_sql($sizesql, array($contextcheck, $contextcheck));
+$size = $DB->get_field_sql($sizesql, [$contextcheck, $contextcheck]);
 if (!empty($size)) {
     $size = display_size($size);
 }

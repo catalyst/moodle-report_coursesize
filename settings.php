@@ -34,10 +34,10 @@ if ($ADMIN->fulltree) {
         new lang_string('calcmethod', 'report_coursesize'),
         new lang_string('calcmethodhelp', 'report_coursesize'),
         'cron',
-        array(
+        [
             'cron' => new lang_string('calcmethodcron', 'report_coursesize'),
             'live' => new lang_string('calcmethodlive', 'report_coursesize'),
-        )
+        ]
     ));
 
     $settings->add(new admin_setting_configtext(
