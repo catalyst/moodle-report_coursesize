@@ -160,10 +160,12 @@ if ($viewtab == 'userstopnum') {
     $totalsize = 0;
     $totalbackupsize = 0;
     $downloaddata = [];
-    $downloaddata[] = [get_string('course'),
+    $downloaddata[] = [
+        get_string('course'),
         get_string('category'),
-        get_string('diskusage', 'report_coursesize'),
-        get_string('backupsize', 'report_coursesize')];;
+        get_string('diskusagemb', 'report_coursesize'),
+        get_string('backupsizemb', 'report_coursesize'),
+    ];
 
     $coursesizes = $DB->get_records('report_coursesize');
     foreach ($courses as $courseid => $course) {
@@ -193,8 +195,12 @@ if ($viewtab == 'userstopnum') {
         $row[] = "<span id=\"coursesize_" . $course->shortname . "\" title=\"$bytesused\">$readablesize</span>" . $summary;
         $row[] = "<span title=\"$backupbytesused\">" . display_size($course->backupsize) . "</span>";
         $coursetable->data[] = $row;
-        $downloaddata[] = [$course->shortname, $course->name, str_replace(',', '', $readablesize),
-            str_replace(',', '', display_size($course->backupsize))];
+        $downloaddata[] = [
+            $course->shortname,
+            $course->name,
+            format_float($course->filesize / 1024 / 1024, 2, false),
+            format_float($course->backupsize / 1024 / 1024, 2, false),
+        ];
     }
 
     // Now add the courses that had no sitedata into the table.
@@ -223,7 +229,12 @@ if ($viewtab == 'userstopnum') {
     $row[] = display_size($totalsize);
     $row[] = display_size($totalbackupsize);
     $coursetable->data[] = $row;
-    $downloaddata[] = [get_string('total'), '', display_size($totalsize), display_size($totalbackupsize)];
+    $downloaddata[] = [
+        get_string('total'),
+        '',
+        format_float($totalsize / 1024 / 1024, 2, false),
+        format_float($totalbackupsize / 1024 / 1024, 2, false),
+    ];
     unset($courses);
 
     $systemsizereadable = display_size($systemsize);
