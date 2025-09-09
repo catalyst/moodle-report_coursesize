@@ -24,6 +24,7 @@
 
 $string['allcourses'] = 'All courses';
 $string['backupsize'] = 'Backup size';
+$string['backupsizemb'] = 'Backup size (MB)';
 $string['cachedef_topuserdata'] = 'Cached info about the users with the largest total amount of data';
 $string['calcmethod'] = 'Update main report';
 $string['calcmethodcron'] = 'Scheduled task';
@@ -39,6 +40,7 @@ $string['coursesize:view'] = 'View course size report';
 $string['coursesize_desc'] = '<p>This report only provides approximate values, if a file is used multiple times within a course or in multiple courses the report counts each instance even though Moodle only stores one physical version on disk.</p>';
 $string['coursesummary'] = '(view stats)';
 $string['diskusage'] = 'Total';
+$string['diskusagemb'] = 'Total (MB)';
 $string['emptycourseshidden'] = 'Courses that do not use any file storage have been excluded from this report.';
 $string['error_unsupported_branch'] = 'Cannot upgrade this old coursereport plugin - you should check/delete the old table before upgrading to this release.';
 $string['exportcsv'] = 'Export CSV';
