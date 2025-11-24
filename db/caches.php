@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin cache definitions.
+ * Cache definitions
  *
  * @package    report_coursesize
- * @author     Kateryna Degtyariova <katerynadegtyariova@catalyst-au.net>
- * @copyright  2022 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @copyright  2025 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

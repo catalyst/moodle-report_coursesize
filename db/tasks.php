@@ -15,21 +15,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * report_coursesize tasks
+ * Task definitions
  *
- * @package   report_coursesize
- * @copyright Catalyst IT
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    report_coursesize
+ * @copyright  2025 Catalyst IT
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
     [
-        'classname' => 'report_coursesize\task\report_async',
+        'classname' => 'report_coursesize\\task\\calculate',
         'blocking'  => 0,
         'minute'    => 'R',
-        'hour'      => '1',
+        'hour'      => '2',
+        'day'       => '*',
+        'dayofweek' => '*',
+        'month'     => '*',
+    ],
+    [
+        'classname' => 'report_coursesize\\task\\send_report',
+        'blocking'  => 0,
+        'minute'    => 'R',
+        'hour'      => '7',
         'day'       => '*',
         'dayofweek' => '*',
         'month'     => '*',

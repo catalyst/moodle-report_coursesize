@@ -18,14 +18,21 @@
  * Version information
  *
  * @package    report_coursesize
- * @copyright  2014 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @copyright  2025 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$ADMIN->add('reports', new admin_externalpage('reportcoursesize', get_string('pluginname', 'report_coursesize'),
-                                              "$CFG->wwwroot/report/coursesize/index.php", 'report/coursesize:view'));
+$ADMIN->add(
+    'reports',
+    new admin_externalpage(
+        'reportcoursesize',
+        get_string('pluginname', 'report_coursesize'),
+        "$CFG->wwwroot/report/coursesize/index.php",
+        'report/coursesize:view'
+    )
+);
 
 $settings = new admin_settingpage('report_coursesize_settings', new lang_string('pluginname', 'report_coursesize'));
 if ($ADMIN->fulltree) {
@@ -40,11 +47,47 @@ if ($ADMIN->fulltree) {
         ]
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'report_coursesize/alwaysdisplaymb',
+        get_string('alwaysdisplaymb', 'report_coursesize'),
+        get_string('alwaysdisplaymb_desc', 'report_coursesize'),
+        0
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'report_coursesize/showgranular',
+        get_string('showgranular', 'report_coursesize'),
+        get_string('showgranular_desc', 'report_coursesize'),
+        0
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'report_coursesize/excludebackups',
+        get_string('excludebackups', 'report_coursesize'),
+        get_string('excludebackups_desc', 'report_coursesize'),
+        0
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'report_coursesize/showcoursecomponents',
+        get_string('showcoursecomponents', 'report_coursesize'),
+        get_string('showcoursecomponents_desc', 'report_coursesize'),
+        0
+    ));
+
     $settings->add(new admin_setting_configtext(
         'report_coursesize/numberofusers',
         new lang_string('numberofusers', 'report_coursesize'),
-        new lang_string('numberofusershelp', 'report_coursesize'),
+        new lang_string('numberofusers_desc', 'report_coursesize'),
         10,
         PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'report_coursesize/emailrecipients',
+        get_string('emailrecipients', 'report_coursesize'),
+        get_string('emailrecipients_desc', 'report_coursesize'),
+        '',
+        PARAM_RAW_TRIMMED
     ));
 }

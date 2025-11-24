@@ -1,21 +1,53 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="report/coursesize/db" VERSION="20220308" COMMENT="XMLDB file for Moodle report/coursesize"
+<XMLDB PATH="report/coursesize/db" VERSION="2025111200" COMMENT="XMLDB file for Moodle report/coursesize"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
     <TABLE NAME="report_coursesize" COMMENT="Coursesize calculations cache.">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="course id"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="contextlevel"/>
+        <FIELD NAME="contextlevel" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Context level (course, category etc.)"/>
+        <FIELD NAME="instanceid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="Course/category etc. id"/>
         <FIELD NAME="filesize" TYPE="int" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="Context size in bytes"/>
-        <FIELD NAME="backupsize" TYPE="int" LENGTH="15" NOTNULL="false" SEQUENCE="false" COMMENT="size of backups"/>
+        <FIELD NAME="backupsize" TYPE="int" LENGTH="15" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Context size of all backups in bytes"/>
+        <FIELD NAME="autobackupsize" TYPE="int" LENGTH="15" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Context size of all automated backups in bytes"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+	  <INDEXES>
+        <INDEX NAME="contextlevel" FIELDS="contextlevel" UNIQUE="false" NEXT="instanceid"/>
+        <INDEX NAME="instanceid" FIELDS="instanceid" UNIQUE="false" PREVIOUS="contextlevel"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="report_coursesize_components" COMMENT="Coursesize calculations cache per course component.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Component name"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="Course id"/>
+        <FIELD NAME="filesize" TYPE="int" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="Context size in bytes"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+	  <INDEXES>
+        <INDEX NAME="component" FIELDS="component" UNIQUE="false"/>
+        <INDEX NAME="courseid" FIELDS="courseid" UNIQUE="false"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="report_coursesize_users" COMMENT="User storage usage (summary).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="filesize" TYPE="int" LENGTH="15" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="backupsize" TYPE="int" LENGTH="15" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+        <INDEX NAME="userid" FIELDS="userid" UNIQUE="false"/>
       </INDEXES>
     </TABLE>
   </TABLES>
