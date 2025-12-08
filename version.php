@@ -18,14 +18,14 @@
  * Version information
  *
  * @package    report_coursesize
- * @copyright  2014 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @copyright  2025 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2024112602;
-$plugin->requires = 2022112800; // Requires 4.1
+$plugin->version  = 2025111206;
+$plugin->requires = 2022112800; // Requires 4.1.
 $plugin->component = 'report_coursesize';
 $plugin->release  = 2024112602;
 $plugin->maturity  = MATURITY_STABLE;

@@ -18,12 +18,12 @@
  * Course breakdown.
  *
  * @package    report_coursesize
- * @copyright  2017 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @copyright  2025 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../config.php');
-require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 $courseid = required_param('id', PARAM_INT);
 
@@ -38,7 +38,7 @@ $sizesql = "SELECT a.component, a.filearea, SUM(a.filesize) as filesize
               FROM (SELECT DISTINCT f.contenthash, f.component, f.filesize, f.filearea
                     FROM {files} f
                     JOIN {context} ctx ON f.contextid = ctx.id
-                    WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
+                    WHERE " . $DB->sql_concat('ctx.path', "'/'") . " LIKE ?
                        AND f.filename != '.') a
              GROUP BY a.component, a.filearea";
 
@@ -46,7 +46,11 @@ $cxsizes = $DB->get_recordset_sql($sizesql, [$contextcheck]);
 
 $coursetable = new html_table();
 $coursetable->align = ['right', 'right', 'right'];
-$coursetable->head = [get_string('plugin'), get_string('filearea', 'report_coursesize'), get_string('size')];
+$coursetable->head = [
+    get_string('pluginname', 'report_coursesize'),
+    get_string('coursefilearea', 'report_coursesize'),
+    get_string('coursesize', 'report_coursesize'),
+];
 $coursetable->data = [];
 
 foreach ($cxsizes as $cxdata) {
@@ -63,11 +67,11 @@ $cxsizes->close();
 $sizesql = "SELECT SUM(filesize) FROM (SELECT DISTINCT contenthash, filesize
             FROM {files} f
             JOIN {context} ctx ON f.contextid = ctx.id
-            WHERE ".$DB->sql_concat('ctx.path', "'/'")." NOT LIKE ?
+            WHERE " . $DB->sql_concat('ctx.path', "'/'") . " NOT LIKE ?
                 AND f.contenthash IN (SELECT DISTINCT f.contenthash
                                       FROM {files} f
                                       JOIN {context} ctx ON f.contextid = ctx.id
-                                     WHERE ".$DB->sql_concat('ctx.path', "'/'")." LIKE ?
+                                     WHERE " . $DB->sql_concat('ctx.path', "'/'") . " LIKE ?
                                        AND f.filename != '.')) b";
 $size = $DB->get_field_sql($sizesql, [$contextcheck, $contextcheck]);
 if (!empty($size)) {
@@ -79,7 +83,7 @@ if (!empty($size)) {
 
 print $OUTPUT->header();
 
-print $OUTPUT->heading(get_string('coursesize', 'report_coursesize'). " - ". format_string($course->fullname));
+print $OUTPUT->heading(get_string('coursesize', 'report_coursesize') . " - " . format_string($course->fullname));
 print $OUTPUT->box(get_string('coursereport', 'report_coursesize'));
 if (!empty($size)) {
     print $OUTPUT->box(get_string('sharedusagecourse', 'report_coursesize', $size));

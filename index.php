@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - http://moodle.org/.
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,294 +15,225 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information
+ * Course size report
  *
  * @package    report_coursesize
- * @copyright  2014 Catalyst IT {@link http://www.catalyst.net.nz}
+ * @subpackage coursesize
+ * @author     Kirill Astashov <kirill.astashov@gmail.com>
+ * @copyright  Copyright (c) 2021 Open LMS (https://www.openlms.net)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
-require_once($CFG->dirroot.'/report/coursesize/locallib.php');
-require_once($CFG->libdir.'/adminlib.php');
-require_once($CFG->libdir.'/csvlib.class.php');
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
+require_once(__DIR__ . '/locallib.php');
 
-admin_externalpage_setup('reportcoursesize');
+require_login();
+require_capability('report/coursesize:view', context_system::instance());
 
-$coursecategory = optional_param('category', 0, PARAM_INT);
-$download = optional_param('download', '', PARAM_ALPHA);
-$viewtab = optional_param('view', 'coursesize', PARAM_ALPHA);
-$reportconfig = get_config('report_coursesize');
+admin_externalpage_setup('reportcoursesize', '', null, '', ['pagelayout' => 'report']);
 
-// If we should show or hide empty courses.
-if (!defined('REPORT_COURSESIZE_SHOWEMPTYCOURSES')) {
-    define('REPORT_COURSESIZE_SHOWEMPTYCOURSES', false);
-}
+// Retrieve options safely.
+$options = \report_coursesize\local\helper::get_options();
+$sortorder = $options['sortorder'] ?? 'ssize';
+$sortdir = $options['sortdir'] ?? 'desc';
+$displaysize = $options['displaysize'] ?? 'auto';
+$excludebackups = $options['excludebackups'] ?? false;
+$orderoptions = $options['orderoptions'] ?? [];
+$diroptions = $options['diroptions'] ?? [];
+$sizeoptions = $options['sizeoptions'] ?? [];
 
-// Data for the tabs in the report.
-$tabdata = ['coursesize' => '', 'userstopnum' => $reportconfig->numberofusers];
-if (!array_key_exists($viewtab, $tabdata)) {
-    // For invalid parameter value use 'coursesize'.
-    $viewtab = array_keys($tabdata)[0];
-}
+$config = get_config('report_coursesize');
 
-$tabs = [];
-foreach ($tabdata as $tabname => $param) {
-    $tabs[] = new tabobject($tabname, new moodle_url($PAGE->url, ['view' => $tabname]),
-        get_string($tabname, 'report_coursesize', $param));
-}
-
-if (empty($download)) {
-    print $OUTPUT->header();
-    echo $OUTPUT->tabtree($tabs, $viewtab);
-}
-
-if ($viewtab == 'userstopnum') {
-    $usersizes = report_coursesize_get_usersizes();
-    if (!empty($usersizes)) {
-        $usertable = new html_table();
-        $usertable->align = ['right', 'right'];
-        $usertable->head = [get_string('user'), get_string('diskusage', 'report_coursesize')];
-        $usertable->data = [];
-        $usercount = 0;
-        foreach ($usersizes as $userid => $size) {
-            $usercount++;
-            $user = $DB->get_record('user', ['id' => $userid]);
-            $row = [];
-            $row[] = '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $userid . '">' . fullname($user) . '</a>';
-            $row[] = display_size($size->totalsize);
-            $usertable->data[] = $row;
-            if ($usercount >= $reportconfig->numberofusers) {
-                break;
-            }
-        }
-        unset($users);
-        print $OUTPUT->heading(get_string('userstopnum', 'report_coursesize', $reportconfig->numberofusers));
-
-        if (!isset($usertable)) {
-            print get_string('nouserfiles', 'report_coursesize');
-        } else {
-            print html_writer::table($usertable);
-        }
-
-    }
-} else if ($viewtab == 'coursesize') {
-
-    if (!empty($reportconfig->filessize) && !empty($reportconfig->filessizeupdated)) {
-        // Total files usage has stored by scheduled task.
-        $totalusage = $reportconfig->filessize;
-        $totaldate = date("Y-m-d H:i", $reportconfig->filessizeupdated);
-    } else {
-        $totaldate = get_string('never');
-        $totalusage = 0;
-    }
-
-    $totalusagereadable = display_size($totalusage);
-    $systemsize = $systembackupsize = 0;
-
-    $coursesql = 'SELECT cx.id, c.id as courseid ' .
-        'FROM {course} c ' .
-        ' INNER JOIN {context} cx ON cx.instanceid=c.id AND cx.contextlevel = ' . CONTEXT_COURSE;
-    $params = [];
-    $courseparams = [];
-    $extracoursesql = '';
-    if (!empty($coursecategory)) {
-        $context = context_coursecat::instance($coursecategory);
-        $coursecat = core_course_category::get($coursecategory);
-        $courses = $coursecat->get_courses(['recursive' => true, 'idonly' => true]);
-
-        if (!empty($courses)) {
-            list($insql, $courseparams) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED);
-            $extracoursesql = ' WHERE c.id ' . $insql;
-        } else {
-            // Don't show any courses if category is selected but category has no courses.
-            // This stuff really needs a rewrite!
-            $extracoursesql = ' WHERE c.id is null';
-        }
-    }
-    $coursesql .= $extracoursesql;
-    $params = array_merge($params, $courseparams);
-    $courselookup = $DB->get_records_sql($coursesql, $params);
-
-    $live = false;
-    $backupsizes = [];
-    if (isset($reportconfig->calcmethod) && ($reportconfig->calcmethod) == 'live') {
-        $live = true;
-    }
-    if ($live) {
-        $filesql = report_coursesize_filesize_sql();
-        $sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize
-          FROM {course} c
-          JOIN ($filesql) rc on rc.course = c.id ";
-
-        // Generate table of backup filesizes too.
-        $backupsql = report_coursesize_backupsize_sql();
-        $backupsizes = $DB->get_records_sql($backupsql);
-    } else {
-        $sql = "SELECT c.id, c.shortname, c.category, ca.name, rc.filesize, rc.backupsize
-          FROM {course} c
-          JOIN {report_coursesize} rc on rc.course = c.id ";
-    }
-
-    $sql .= "JOIN {course_categories} ca on c.category = ca.id
-         $extracoursesql
-     ORDER BY rc.filesize DESC";
-    $courses = $DB->get_records_sql($sql, $courseparams);
-
-    $coursetable = new html_table();
-    $coursetable->align = ['right', 'right', 'left'];
-    $coursetable->head = [get_string('course'),
-        get_string('category'),
-        get_string('diskusage', 'report_coursesize'),
-        get_string('backupsize', 'report_coursesize')];
-    $coursetable->data = [];
-
-    $totalsize = 0;
-    $totalbackupsize = 0;
-    $downloaddata = [];
-    $downloaddata[] = [
-        get_string('course'),
-        get_string('category'),
-        get_string('diskusagemb', 'report_coursesize'),
-        get_string('backupsizemb', 'report_coursesize'),
+// New dataformat-based export.
+$dataformat = optional_param('dataformat', '', PARAM_ALPHANUMEXT);
+if ($dataformat !== '') {
+    // Define column metadata for the export.
+    $columns = [
+        'category' => get_string('tcategories', 'report_coursesize'),
+        'course'   => get_string('tcourse', 'report_coursesize'),
     ];
 
-    $coursesizes = $DB->get_records('report_coursesize');
-    foreach ($courses as $courseid => $course) {
-        if (isset($backupsizes[$course->id])) {
-            $course->backupsize = $backupsizes[$course->id]->filesize;
-        } else {
-            $course->backupsize = 0;
-        }
-        $totalsize = $totalsize + $course->filesize;
-        $totalbackupsize = $totalbackupsize + $course->backupsize;
-        $coursecontext = context_course::instance($course->id);
-        $course->shortname = format_string($course->shortname, true, ['context' => $coursecontext]);
-        $course->name = format_string($course->name, true, ['context' => $coursecontext]);
-        $row = [];
-        $row[] = '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $course->id . '">' . $course->shortname . '</a>';
-        $row[] = '<a href="' . $CFG->wwwroot . '/course/index.php?categoryid=' . $course->category . '">' . $course->name . '</a>';
+    if (!empty($config->excludebackups)) {
+        $columns['totalsize']  = get_string('ttsize', 'report_coursesize');
+        $columns['coursesize'] = get_string('tcsize', 'report_coursesize');
+        $columns['backupsize'] = get_string('tbsize', 'report_coursesize');
+    } else {
+        $columns['size'] = get_string('tsize', 'report_coursesize');
+    }
 
-        $readablesize = display_size($course->filesize);
-        $a = new stdClass;
-        $a->bytes = $course->filesize;
-        $a->shortname = $course->shortname;
-        $a->backupbytes = $course->backupsize;
-        $bytesused = get_string('coursebytes', 'report_coursesize', $a);
-        $backupbytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
-        $summarylink = new moodle_url('/report/coursesize/course.php', ['id' => $course->id]);
-        $summary = html_writer::link($summarylink, ' ' . get_string('coursesummary', 'report_coursesize'));
-        $row[] = "<span id=\"coursesize_" . $course->shortname . "\" title=\"$bytesused\">$readablesize</span>" . $summary;
-        $row[] = "<span title=\"$backupbytesused\">" . display_size($course->backupsize) . "</span>";
-        $coursetable->data[] = $row;
-        $downloaddata[] = [
-            $course->shortname,
-            $course->name,
-            format_float($course->filesize / 1024 / 1024, 2, false),
-            format_float($course->backupsize / 1024 / 1024, 2, false),
+    // Get the existing export data (already formatted by locallib).
+    $exportdata = report_coursesize_export($displaysize, $sortorder, $sortdir);
+    $iterator = new ArrayIterator($exportdata);
+
+    // Stream the file in the selected format using the Dataformat API.
+    \core\dataformat::download_data(
+        'report_coursesize_export',
+        $dataformat,
+        $columns,
+        $iterator,
+        function ($row, bool $supportshtml) use ($config): array {
+            $row = (array)$row;
+
+            if (!empty($config->excludebackups)) {
+                return [
+                    'category'   => $row[0] ?? '',
+                    'course'     => $row[1] ?? '',
+                    'totalsize'  => $row[2] ?? '',
+                    'coursesize' => $row[3] ?? '',
+                    'backupsize' => $row[4] ?? '',
+                ];
+            }
+
+            return [
+                'category' => $row[0] ?? '',
+                'course'   => $row[1] ?? '',
+                'size'     => $row[2] ?? '',
+            ];
+        }
+    );
+
+    exit;
+}
+
+echo $OUTPUT->header();
+
+$view = optional_param('view', 'courses', PARAM_ALPHA);
+$baseurl = new moodle_url('/report/coursesize/index.php');
+$tabs = [
+    new tabobject(
+        'courses',
+        new moodle_url($baseurl, ['view' => 'courses']),
+        get_string('tab_courses', 'report_coursesize')
+    ),
+    new tabobject(
+        'users',
+        new moodle_url($baseurl, ['view' => 'users']),
+        get_string('tab_users', 'report_coursesize')
+    ),
+];
+echo $OUTPUT->tabtree($tabs, $view);
+
+if ($view === 'users') {
+    $n = (int)get_config('report_coursesize', 'numberofusers');
+    if ($n <= 0) {
+        $n = 10;
+    }
+
+    $sql = "SELECT u.id, u.firstname, u.lastname, u.email, ru.filesize, ru.backupsize
+              FROM {report_coursesize_users} ru
+              JOIN {user} u ON u.id = ru.userid
+          ORDER BY ru.filesize DESC";
+    $users = $DB->get_records_sql($sql, null, 0, $n);
+
+    $table = new html_table();
+    $table->head = [
+        get_string('user'),
+        get_string('diskusage', 'report_coursesize'),
+        get_string('backupsize', 'report_coursesize'),
+    ];
+    $table->data = [];
+
+    foreach ($users as $usr) {
+        $profileurl = new moodle_url('/user/profile.php', ['id' => $usr->id]);
+        $name = fullname($usr);
+        $table->data[] = [
+            html_writer::link($profileurl, format_string($name)),
+            display_size((int)$usr->filesize),
+            display_size((int)$usr->backupsize),
         ];
     }
 
-    // Now add the courses that had no sitedata into the table.
-    if (REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
-        $a = new stdClass;
-        $a->bytes = 0;
-        $a->backupbytes = 0;
-        foreach ($courses as $cid => $course) {
-            $course->shortname = format_string($course->shortname, true, context_course::instance($course->id));
-            $a->shortname = $course->shortname;
-            $bytesused = get_string('coursebytes', 'report_coursesize', $a);
-            $bytesused = get_string('coursebackupbytes', 'report_coursesize', $a);
-            $row = [];
-            $row[] = '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $course->id . '">' . $course->shortname . '</a>';
-            $row[] = "<span title=\"$bytesused\">0</span>";
-            $row[] = "<span title=\"$bytesused\">0</span>";
-            $coursetable->data[] = $row;
-        }
-    }
-    // Now add the totals to the bottom of the table.
-    $coursetable->data[] = []; // Add empty row before total.
-    $downloaddata[] = [];
-    $row = [];
-    $row[] = get_string('total');
-    $row[] = '';
-    $row[] = display_size($totalsize);
-    $row[] = display_size($totalbackupsize);
-    $coursetable->data[] = $row;
-    $downloaddata[] = [
-        get_string('total'),
-        '',
-        format_float($totalsize / 1024 / 1024, 2, false),
-        format_float($totalbackupsize / 1024 / 1024, 2, false),
-    ];
-    unset($courses);
-
-    $systemsizereadable = display_size($systemsize);
-    $systembackupreadable = display_size($systembackupsize);
-
-
-    // Add in Course Cat including dropdown to filter.
-
-    $url = '';
-    $catlookup = $DB->get_records_sql('select id,name from {course_categories}');
-    $options = ['0' => get_string('allcourses', 'report_coursesize')];
-    foreach ($catlookup as $cat) {
-        $context = context_system::instance();
-        $options[$cat->id] = format_string($cat->name, true, ['context' => $context]);
-    }
-
-    // Add in download option. Exports CSV.
-
-    if (!empty($download)) {
-        $downloadfilename = clean_filename('coursesize-' . gmdate("Ymd_Hi"));
-        $columns = array_shift($downloaddata);
-        \core\dataformat::download_data($downloadfilename, $download, $columns, $downloaddata);
-        exit;
-    }
-
-    if (empty($coursecat)) {
-        $updatestring = !empty($reportconfig->filessizeupdated) ? userdate($reportconfig->filessizeupdated) : get_string('never');
-        print $OUTPUT->heading(get_string("sitefilesusage", 'report_coursesize'));
-        print '<strong>' . get_string("totalsitedata", 'report_coursesize', $totalusagereadable) . '</strong> ';
-        print get_string('lastupdate', 'report_coursesize', $updatestring) . "<br/><br/>\n";
-        print get_string('catsystemuse', 'report_coursesize', $systemsizereadable) . "<br/>";
-        print get_string('catsystembackupuse', 'report_coursesize', $systembackupreadable) . "<br/>";
-        if (!empty($CFG->filessizelimit)) {
-            print get_string("sizepermitted", 'report_coursesize', number_format($CFG->filessizelimit)) . "<br/>\n";
-        }
-    }
-    $lastupdate = '';
-    if (!$live) {
-        if (empty($reportconfig->coursesizeupdated)) {
-            $lastupdate = get_string('lastupdatenever', 'report_coursesize');
-        } else {
-            $lastupdate = get_string('lastupdate', 'report_coursesize', userdate($reportconfig->coursesizeupdated));
-        }
-        $lastupdate = html_writer::span($lastupdate, 'lastupdate');
-    }
-    $heading = get_string('coursesize', 'report_coursesize');
-    if (!empty($coursecat)) {
-        $heading .= " - " . $coursecat->name;
-    }
-    print $OUTPUT->heading($heading . ' ' . $lastupdate);
-
-    $desc = get_string('coursesize_desc', 'report_coursesize');
-
-    if (!REPORT_COURSESIZE_SHOWEMPTYCOURSES) {
-        $desc .= ' ' . get_string('emptycourseshidden', 'report_coursesize');
-    }
-    print $OUTPUT->box($desc);
-
-    $filter = $OUTPUT->single_select($url, 'category', $options, $coursecategory, []);
-    $downloadbuttons = $OUTPUT->download_dataformat_selector(
-        get_string('downloadas', 'table'),
-        new \moodle_url('/report/coursesize/index.php'),
-        'download',
-        ['category' => $coursecategory],
-    );
-
-    print $OUTPUT->box($filter . $downloadbuttons, 'd-flex justify-content-between flex-wrap align-items-center');
-
-    print html_writer::table($coursetable);
+    echo html_writer::tag('h3', get_string('topusers', 'report_coursesize', $n));
+    echo html_writer::table($table);
+    echo $OUTPUT->footer();
+    exit;
 }
-print $OUTPUT->footer();
+
+$lastruntime = !isset($config->lastruntime)
+    ? get_string('nevercap', 'report_coursesize')
+    : date('r', $config->lastruntime);
+
+$livecalcenabled = (isset($config->calcmethod) && $config->calcmethod === 'live')
+    ? get_string('enabledcap', 'report_coursesize')
+    : get_string('disabledcap', 'report_coursesize');
+
+echo html_writer::div(
+    get_string('lastcalculated', 'report_coursesize') . $lastruntime,
+    '',
+    ['style' => 'margin-bottom:10px;']
+);
+
+echo html_writer::div(
+    get_string('livecalc', 'report_coursesize') . $livecalcenabled,
+    '',
+    ['style' => 'margin-bottom:10px;']
+);
+
+$forminputs = [];
+$forminputs[] = get_string('sortby', 'report_coursesize') .
+    html_writer::select($orderoptions, 'sorder', $sortorder, []);
+$forminputs[] = get_string('sortdir', 'report_coursesize') .
+    html_writer::select($diroptions, 'sdir', $sortdir, []);
+
+if (empty($config->alwaysdisplaymb)) {
+    $forminputs[] = get_string('displaysize', 'report_coursesize') .
+        html_writer::select($sizeoptions, 'display', $displaysize, []);
+} else {
+    $forminputs[] = html_writer::empty_tag('input', [
+        'type' => 'hidden',
+        'name' => 'display',
+        'value' => 'mb',
+    ]);
+}
+
+if (!empty($config->excludebackups)) {
+    $forminputs[] = get_string('excludebackup', 'report_coursesize') .
+        html_writer::checkbox('excludebackups', 1, $excludebackups, '');
+}
+
+$forminputs[] = html_writer::empty_tag('input', [
+    'type' => 'submit',
+    'name' => 'go',
+    'value' => get_string('refresh'),
+]);
+
+echo html_writer::start_div('', ['style' => 'text-align:center;margin-bottom:10px;']);
+echo html_writer::start_tag('form', [
+    'name' => 'sortoptions',
+    'method' => 'POST',
+    'action' => new moodle_url('/report/coursesize/index.php'),
+]);
+echo implode('&nbsp;&nbsp;&nbsp;', $forminputs);
+echo html_writer::end_tag('form');
+echo html_writer::end_div();
+
+// Dataformat download selector (CSV, Excel, ODS, JSON, etc).
+$downloadparams = [
+    'view'        => $view,
+    'sorder'      => $sortorder,
+    'sdir'        => $sortdir,
+    'display'     => $displaysize,
+];
+
+if (!empty($config->excludebackups)) {
+    $downloadparams['excludebackups'] = 1;
+}
+
+echo html_writer::start_div('', ['style' => 'text-align:center;margin:10px;']);
+echo $OUTPUT->download_dataformat_selector(
+    get_string('export', 'report_coursesize'),
+    new moodle_url('/report/coursesize/index.php'),
+    'dataformat',
+    $downloadparams
+);
+echo html_writer::end_div();
+
+$PAGE->requires->js_call_amd(
+    'report_coursesize/catsize',
+    'init',
+    [$sortorder, $sortdir, $displaysize, $excludebackups]
+);
+
+echo html_writer::div('', '', ['id' => 'cat0', 'style' => 'display:none;']);
+echo $OUTPUT->footer();
