@@ -30,6 +30,7 @@ $string['alwaysdisplaymb'] = 'Always display in MB';
 $string['alwaysdisplaymb_desc'] = 'If enabled, the course information will be always displayed in MB.';
 $string['backupsize'] = 'Backup size';
 $string['bytes'] = 'bytes';
+$string['cachedef_topuserdata'] = 'Top user data cache';
 $string['calcmethod'] = 'Calculations';
 $string['calcmethodcron'] = 'By cron';
 $string['calcmethodhelp'] = 'If calculated by cron, the report will run at the scheduled time and cache the results for later viewing.  This is recommended over live calculations, since it will only place load on your site once per day during a quiet period. Please use extra care with live calculations since heavy database queries may put high load on the DB server and slow down the whole instance. Enabling this feature on instances with more than 10,000 file records in not recommended and you are encouraged to rely on daily cron calculations.';
