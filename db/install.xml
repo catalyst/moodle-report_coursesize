@@ -7,8 +7,8 @@
     <TABLE NAME="report_coursesize" COMMENT="Coursesize calculations cache.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="contextlevel"/>
-        <FIELD NAME="contextlevel" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Context level (course, category etc.)"/>
-        <FIELD NAME="instanceid" TYPE="int" LENGTH="11" NOTNULL="true" SEQUENCE="false" COMMENT="Course/category etc. id"/>
+        <FIELD NAME="contextlevel" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="50" SEQUENCE="false" COMMENT="Context level (course, category etc.)"/>
+        <FIELD NAME="instanceid" TYPE="int" LENGTH="11" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Course/category etc. id"/>
         <FIELD NAME="filesize" TYPE="int" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="Context size in bytes"/>
         <FIELD NAME="backupsize" TYPE="int" LENGTH="15" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Context size of all backups in bytes"/>
         <FIELD NAME="autobackupsize" TYPE="int" LENGTH="15" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Context size of all automated backups in bytes"/>
@@ -41,7 +41,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="filesize" TYPE="int" LENGTH="15" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="backupsize" TYPE="int" LENGTH="15" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="backupsize" TYPE="int" LENGTH="15" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
