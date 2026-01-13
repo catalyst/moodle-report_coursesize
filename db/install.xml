@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="report/coursesize/db" VERSION="2025111200" COMMENT="XMLDB file for Moodle report/coursesize"
+<XMLDB PATH="report/coursesize/db" VERSION="20260113" COMMENT="XMLDB file for Moodle report/coursesize"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
     <TABLE NAME="report_coursesize" COMMENT="Coursesize calculations cache.">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="contextlevel"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="contextlevel" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="50" SEQUENCE="false" COMMENT="Context level (course, category etc.)"/>
         <FIELD NAME="instanceid" TYPE="int" LENGTH="11" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Course/category etc. id"/>
         <FIELD NAME="filesize" TYPE="int" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="Context size in bytes"/>
@@ -16,9 +16,9 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
-	  <INDEXES>
-        <INDEX NAME="contextlevel" FIELDS="contextlevel" UNIQUE="false" NEXT="instanceid"/>
-        <INDEX NAME="instanceid" FIELDS="instanceid" UNIQUE="false" PREVIOUS="contextlevel"/>
+      <INDEXES>
+        <INDEX NAME="contextlevel" UNIQUE="false" FIELDS="contextlevel"/>
+        <INDEX NAME="instanceid" UNIQUE="false" FIELDS="instanceid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="report_coursesize_components" COMMENT="Coursesize calculations cache per course component.">
@@ -31,9 +31,9 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
-	  <INDEXES>
-        <INDEX NAME="component" FIELDS="component" UNIQUE="false"/>
-        <INDEX NAME="courseid" FIELDS="courseid" UNIQUE="false"/>
+      <INDEXES>
+        <INDEX NAME="component" UNIQUE="false" FIELDS="component"/>
+        <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="report_coursesize_users" COMMENT="User storage usage (summary).">
@@ -47,7 +47,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="userid" FIELDS="userid" UNIQUE="false"/>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
       </INDEXES>
     </TABLE>
   </TABLES>
