@@ -95,7 +95,7 @@ function report_coursesize_crontask() {
                       JOIN {course} c ON c.id = cm.course
                       JOIN {files} f ON f.contextid = cx.id
                    ) x
-             GROUP BY concat, id, category, component, filearea
+             GROUP BY id, category, component, filearea
              ORDER BY id ASC";
     $params = [
         'ctxc1' => CONTEXT_COURSE,
@@ -313,7 +313,7 @@ function report_coursesize_catcalc($catid, $excludebackups = false) {
                       JOIN {files} f ON f.contextid = cx.id
                      WHERE c.id IN (SELECT courseid FROM ({$coursesql}) x)
                    ) x
-          GROUP BY concat, component, filearea";
+          GROUP BY component, filearea";
     $cats = $DB->get_recordset_sql($sql, $params);
 
     $sizecache = [0, 0, 0];
@@ -441,7 +441,7 @@ function report_coursesize_coursecalc($courseid, $excludebackups = false) {
                       JOIN {files} f ON f.contextid = cx.id
                      WHERE c.id = :id3
                    ) x
-          GROUP BY concat, component, filearea";
+          GROUP BY component, filearea";
 
     $course = $DB->get_records_sql($sql, ['id1' => $courseid, 'id2' => $courseid, 'id3' => $courseid]);
     if (!$course) {
