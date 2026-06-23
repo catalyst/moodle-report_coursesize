@@ -59,6 +59,8 @@ final class calculate_task_test extends advanced_testcase {
             'filename'  => 'a.txt',
         ], str_repeat('X', 5000));
 
+        $this->expectOutputRegex('/Task complete\./');
+
         $task = manager::get_scheduled_task('\report_coursesize\task\calculate');
         $task->execute();
 
@@ -84,6 +86,7 @@ final class calculate_task_test extends advanced_testcase {
     }
 
     public function test_lastruntime_is_updated(): void {
+        $this->expectOutputRegex('/Task complete\./');
         $task = manager::get_scheduled_task('\report_coursesize\task\calculate');
         $task->execute();
 
