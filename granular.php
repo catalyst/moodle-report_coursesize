@@ -64,7 +64,7 @@ if ($filelist) {
     $table->data = [];
 
     foreach ($filelist as $fileinfo) {
-        $filename = $fileinfo->filename;
+        $filename = s($fileinfo->filename);
 
         if ($dohtml) {
             // Soft-break long lines on underscores with a zero-width space.
@@ -76,6 +76,7 @@ if ($filelist) {
         if (str_contains($fileinfo->filename, '.')) {
             $parts = explode('.', $fileinfo->filename);
             $ext = end($parts);
+            $ext = s($ext);
         }
 
         $username = $DB->get_field('user', 'username', ['id' => $fileinfo->userid]);
