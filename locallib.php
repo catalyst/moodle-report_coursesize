@@ -853,7 +853,7 @@ function report_coursesize_export($displaysize, $sortorder, $sortdir) {
     $sql .= ' ORDER BY ' . $orderby;
 
     if ($cats = $DB->get_records_sql($sql, $params)) {
-        if ($config->calcmethod == 'live') {
+        if (isset($config->calcmethod) && $config->calcmethod == 'live') {
             // Recalculate.
             $dosort = false;
             foreach ($cats as $cat) {
@@ -934,7 +934,7 @@ function report_coursesize_export($displaysize, $sortorder, $sortdir) {
     $categories[0] = '/';
 
     if ($courses = $DB->get_records_sql($sql, $params)) {
-        if ($config->calcmethod == 'live') {
+        if (isset($config->calcmethod) && $config->calcmethod == 'live') {
             // Recalculate.
             $dosort = false;
             foreach ($courses as $course) {

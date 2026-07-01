@@ -28,7 +28,7 @@ $capabilities = [
 
     /* allows the user to view the site's data usage summary */
     'report/coursesize:view' => [
-        'riskbitmask' => RISK_CONFIG,
+        'riskbitmask' => RISK_PERSONAL | RISK_CONFIG,
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
