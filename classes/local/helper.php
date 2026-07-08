@@ -43,9 +43,9 @@ class helper {
         $displaysizedefault = 'auto';
         $excludebackupsdefault = 0;
 
-        $sortorder = optional_param('sorder', $sortorderdefault, PARAM_TEXT);
-        $sortdir = optional_param('sdir', $sortdirdefault, PARAM_TEXT);
-        $displaysize = optional_param('display', $displaysizedefault, PARAM_TEXT);
+        $sortorder = optional_param('sorder', $sortorderdefault, PARAM_ALPHA);
+        $sortdir = optional_param('sdir', $sortdirdefault, PARAM_ALPHA);
+        $displaysize = optional_param('display', $displaysizedefault, PARAM_ALPHA);
         $excludebackups = optional_param('excludebackups', $excludebackupsdefault, PARAM_INT);
 
         // Display options.
