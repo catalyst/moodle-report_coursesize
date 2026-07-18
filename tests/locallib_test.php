@@ -142,6 +142,7 @@ final class locallib_test extends advanced_testcase {
     }
 
     public function test_export_generates_data(): void {
+        $this->setAdminUser();
         set_config('showcoursecomponents', 1, 'report_coursesize');
 
         $generator = $this->getDataGenerator();
