@@ -73,7 +73,7 @@ if ($filelist) {
 
         // Derive file extension safely.
         $ext = '';
-        if (str_contains($fileinfo->filename, '.')) {
+        if (strpos($fileinfo->filename, '.') !== false) {
             $parts = explode('.', $fileinfo->filename);
             $ext = end($parts);
             $ext = s($ext);
