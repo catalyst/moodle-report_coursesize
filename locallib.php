@@ -554,12 +554,8 @@ function report_coursesize_uniquetotalcalc($excludebackups = false) {
               FROM (
                     SELECT DISTINCT(f.contenthash), f.filesize AS filesize
                       FROM {files} f
-                     WHERE f.id IN (
-                               SELECT f.id
-                                 FROM {files}
-                                WHERE f.component = 'backup'
-                                  AND f.filearea = 'automated'
-                           )
+                     WHERE f.component = 'backup'
+                       AND f.filearea = 'automated'
                    ) fs";
     $row = $DB->get_record_sql($sql);
     $autobackupsize = $row->filesize;
