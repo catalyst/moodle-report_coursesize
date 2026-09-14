@@ -845,8 +845,8 @@ function report_coursesize_export($displaysize, $sortorder, $sortdir) {
                ct.name AS catname,
                ct.parent AS catparent,
                ct.sortorder AS sortorder,
-               rc.filesize AS filesize,
-               rc.backupsize AS backupsize
+               CASE WHEN rc.filesize > 0 THEN rc.filesize ELSE 0 END AS filesize,
+               CASE WHEN rc.backupsize > 0 THEN rc.backupsize ELSE 0 END AS backupsize
           FROM {course_categories} ct
      LEFT JOIN {report_coursesize} rc
             ON ct.id = rc.instanceid AND rc.contextlevel = :ctxcc';
@@ -923,8 +923,8 @@ function report_coursesize_export($displaysize, $sortorder, $sortdir) {
                c.shortname AS courseshortname,
                c.sortorder AS sortorder,
                c.category AS coursecategory,
-               rc.filesize AS filesize,
-               rc.backupsize AS backupsize
+               CASE WHEN rc.filesize > 0 THEN rc.filesize ELSE 0 END AS filesize,
+               CASE WHEN rc.backupsize > 0 THEN rc.backupsize ELSE 0 END AS backupsize
           FROM {course} c
      LEFT JOIN {report_coursesize} rc
             ON c.id = rc.instanceid AND rc.contextlevel = :ctxc";
