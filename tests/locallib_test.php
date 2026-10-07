@@ -84,6 +84,74 @@ final class locallib_test extends advanced_testcase {
         $this->assertNotEmpty($rec);
     }
 
+    /**
+     * Course batches preserve context, component and nested category totals.
+     *
+     * @covers ::report_coursesize_crontask
+     */
+    public function test_crontask_batches(): void {
+        global $DB;
+
+        $generator = $this->getDataGenerator();
+        $parent = $generator->create_category();
+        $category = $generator->create_category(['parent' => $parent->id]);
+        $courses = [];
+        for ($index = 0; $index < 101; $index++) {
+            $courses[] = $generator->create_course(['category' => $category->id]);
+        }
+        $firstcourse = reset($courses);
+        $lastcourse = end($courses);
+        $coursecontext = context_course::instance($firstcourse->id);
+        $module = $generator->create_module('page', ['course' => $firstcourse->id]);
+        $block = $generator->create_block('html', ['parentcontextid' => $coursecontext->id]);
+
+        $files = [
+            [$coursecontext->id, 'mod_page', 'content', 100],
+            [\context_module::instance($module->cmid)->id, 'mod_page', 'content', 200],
+            [\context_block::instance($block->id)->id, 'mod_page', 'content', 300],
+            [$coursecontext->id, 'backup', 'course', 40],
+            [$coursecontext->id, 'backup', 'automated', 60],
+            [context_course::instance($lastcourse->id)->id, 'mod_page', 'content', 900],
+        ];
+        $storage = get_file_storage();
+        foreach ($files as $index => [$contextid, $component, $filearea, $filesize]) {
+            $storage->create_file_from_string([
+                'contextid' => $contextid,
+                'component' => $component,
+                'filearea' => $filearea,
+                'itemid' => 0,
+                'filepath' => '/',
+                'filename' => 'file' . $index . '.txt',
+            ], str_repeat('X', $filesize));
+        }
+
+        $this->assertTrue(report_coursesize_crontask());
+        $this->assertEquals(700, report_coursesize_getcachevalue(CONTEXT_COURSE, $firstcourse->id));
+        $this->assertEquals(600, report_coursesize_getcachevalue(CONTEXT_COURSE, $firstcourse->id, true));
+        $this->assertEquals(640, report_coursesize_getcachevalue(CONTEXT_COURSE, $firstcourse->id, false, true));
+        $this->assertEquals(900, report_coursesize_getcachevalue(CONTEXT_COURSE, $lastcourse->id));
+        foreach ([$parent->id, $category->id] as $categoryid) {
+            $this->assertEquals(1600, report_coursesize_getcachevalue(CONTEXT_COURSECAT, $categoryid));
+            $this->assertEquals(1500, report_coursesize_getcachevalue(CONTEXT_COURSECAT, $categoryid, true));
+            $this->assertEquals(1540, report_coursesize_getcachevalue(CONTEXT_COURSECAT, $categoryid, false, true));
+        }
+        $this->assertEquals(1600, report_coursesize_getcachevalue(0, 0));
+        $this->assertEquals(1500, report_coursesize_getcachevalue(0, 0, true));
+        $this->assertEquals(1540, report_coursesize_getcachevalue(0, 0, false, true));
+        $this->assertEquals(600, $DB->get_field('report_coursesize_components', 'filesize', [
+            'courseid' => $firstcourse->id,
+            'component' => 'mod_page',
+        ], MUST_EXIST));
+        $this->assertEquals(100, $DB->get_field('report_coursesize_components', 'filesize', [
+            'courseid' => $firstcourse->id,
+            'component' => 'backup',
+        ], MUST_EXIST));
+        $this->assertEquals(900, $DB->get_field('report_coursesize_components', 'filesize', [
+            'courseid' => $lastcourse->id,
+            'component' => 'mod_page',
+        ], MUST_EXIST));
+    }
+
     public function test_coursecalc_granular(): void {
         $generator = $this->getDataGenerator();
         $course = $generator->create_course();
