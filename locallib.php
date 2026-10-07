@@ -77,23 +77,29 @@ function report_coursesize_crontask() {
     // Get COURSE sizes and populate db.
     $sql = "SELECT $fileconcat AS concat, id, category, component, filearea, SUM(filesize) AS filesize
               FROM (
-                    SELECT c.id, c.category, f.component, f.filearea, f.filesize
+                                        SELECT c.id, c.category, f.component, f.filearea, SUM(f.filesize) AS filesize
                       FROM {course} c
                       JOIN {context} cx ON cx.contextlevel = :ctxc1 AND cx.instanceid = c.id
                       JOIN {files} f ON f.contextid = cx.id
+                                         WHERE c.id > :lastcourseid1 AND c.id <= :maxcourseid1
+                                    GROUP BY c.id, c.category, f.component, f.filearea
                     UNION ALL
-                    SELECT c.id, c.category, f.component, f.filearea, f.filesize
+                                        SELECT c.id, c.category, f.component, f.filearea, SUM(f.filesize) AS filesize
                       FROM {block_instances} bi
                       JOIN {context} cx1 ON cx1.contextlevel = :ctxb AND cx1.instanceid = bi.id
                       JOIN {context} cx2 ON cx2.contextlevel = :ctxc2 AND cx2.id = bi.parentcontextid
                       JOIN {course} c ON c.id = cx2.instanceid
                       JOIN {files} f ON f.contextid = cx1.id
+                                         WHERE c.id > :lastcourseid2 AND c.id <= :maxcourseid2
+                                    GROUP BY c.id, c.category, f.component, f.filearea
                     UNION ALL
-                    SELECT c.id, c.category, f.component, f.filearea, f.filesize
+                                        SELECT c.id, c.category, f.component, f.filearea, SUM(f.filesize) AS filesize
                       FROM {course_modules} cm
                       JOIN {context} cx ON cx.contextlevel = :ctxm AND cx.instanceid = cm.id
                       JOIN {course} c ON c.id = cm.course
                       JOIN {files} f ON f.contextid = cx.id
+                                         WHERE c.id > :lastcourseid3 AND c.id <= :maxcourseid3
+                                    GROUP BY c.id, c.category, f.component, f.filearea
                    ) x
              GROUP BY id, category, component, filearea
              ORDER BY id ASC";
@@ -103,30 +109,39 @@ function report_coursesize_crontask() {
         'ctxm'  => CONTEXT_MODULE,
         'ctxb'  => CONTEXT_BLOCK,
     ];
-    $courses = $DB->get_recordset_sql($sql, $params);
-
     $coursesizecache = [];
     $componentsizecache = [];
+    $lastcourseid = 0;
 
-    foreach ($courses as $course) {
-        if (!isset($coursesizecache[$course->id])) {
-            $coursesizecache[$course->id] = [0, 0, 0];
+    while ($batch = $DB->get_records_select('course', 'id > :lastid', ['lastid' => $lastcourseid], 'id ASC', 'id', 0, 100)) {
+        $maxcourseid = end($batch)->id;
+        for ($branch = 1; $branch <= 3; $branch++) {
+            $params['lastcourseid' . $branch] = $lastcourseid;
+            $params['maxcourseid' . $branch] = $maxcourseid;
         }
-        if (!isset($componentsizecache[$course->id][$course->component])) {
-            $componentsizecache[$course->id][$course->component] = 0;
-        }
+        $courses = $DB->get_recordset_sql($sql, $params);
 
-        $coursesizecache[$course->id][0] += $course->filesize;
-        $componentsizecache[$course->id][$course->component] += $course->filesize;
+        foreach ($courses as $course) {
+            if (!isset($coursesizecache[$course->id])) {
+                $coursesizecache[$course->id] = [0, 0, 0];
+            }
+            if (!isset($componentsizecache[$course->id][$course->component])) {
+                $componentsizecache[$course->id][$course->component] = 0;
+            }
 
-        if ($course->component == 'backup') {
-            $coursesizecache[$course->id][1] += $course->filesize;
+            $coursesizecache[$course->id][0] += $course->filesize;
+            $componentsizecache[$course->id][$course->component] += $course->filesize;
+
+            if ($course->component == 'backup') {
+                $coursesizecache[$course->id][1] += $course->filesize;
+            }
+            if ($course->component == 'backup' && $course->filearea == 'automated') {
+                $coursesizecache[$course->id][2] += $course->filesize;
+            }
         }
-        if ($course->component == 'backup' && $course->filearea == 'automated') {
-            $coursesizecache[$course->id][2] += $course->filesize;
-        }
+        $courses->close();
+        $lastcourseid = $maxcourseid;
     }
-    $courses->close();
 
     foreach ($coursesizecache as $courseid => $filesizes) {
         if (
